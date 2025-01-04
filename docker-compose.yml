@@ -1,0 +1,14 @@
+# docker-compose.yml
+version: "3"
+
+services:
+  app:
+    build: ./
+    container_name: "job_app_tracker"
+    volumes:
+      - .:/app
+    ports:
+      - "3110:3000"
+    environment:
+      - NEXT_TELEMETRY_DISABLED=1
+    restart: unless-stopped
