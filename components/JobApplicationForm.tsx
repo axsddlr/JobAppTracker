@@ -1,8 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { X } from 'lucide-react';
-import { JobApplication, ApplicationStatus } from '@/types/job-application';
+import { JobApplication, Platform } from '@/types/job-application';
 
 interface JobApplicationFormProps {
   onSubmit: (application: Partial<JobApplication>) => void;
@@ -17,7 +16,6 @@ export default function JobApplicationForm({
   initialData,
   mode = 'create' 
 }: JobApplicationFormProps) {
-  // Get today's date in local timezone
   const today = new Date();
   const localDate = new Date(today.getTime() - (today.getTimezoneOffset() * 60000))
                     .toISOString()
@@ -25,9 +23,12 @@ export default function JobApplicationForm({
 
   const [formData, setFormData] = useState<Partial<JobApplication>>({
     companyName: initialData?.companyName || '',
+    position: initialData?.position || '',
+    platform: initialData?.platform || undefined,
+    customPlatform: initialData?.customPlatform || '',
     jobUrl: initialData?.jobUrl || '',
     dateApplied: initialData?.dateApplied || localDate,
-    status: initialData?.status || 'pending' as ApplicationStatus,
+    status: initialData?.status || 'pending',
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -43,7 +44,7 @@ export default function JobApplicationForm({
             {mode === 'create' ? 'Add New Application' : 'Edit Application'}
           </h2>
           <button onClick={onCancel} className="text-muted-foreground hover:text-foreground">
-            <X className="h-5 w-5" />
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
           </button>
         </div>
 
@@ -57,6 +58,49 @@ export default function JobApplicationForm({
               value={formData.companyName}
               onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1 text-foreground">Position</label>
+            <input
+              type="text"
+              className="w-full p-2 rounded-md bg-background border text-foreground"
+              value={formData.position}
+              onChange={(e) => setFormData({ ...formData, position: e.target.value })}
+              placeholder="Optional"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1 text-foreground">Platform</label>
+            <select
+              className="w-full p-2 rounded-md bg-background border text-foreground mb-2"
+              value={formData.platform || ''}
+              onChange={(e) => {
+                const platform = e.target.value as Platform | '';
+                setFormData({ 
+                  ...formData, 
+                  platform: platform || undefined,
+                  customPlatform: platform !== 'other' ? undefined : formData.customPlatform 
+                });
+              }}
+            >
+              <option value="">Select Platform (Optional)</option>
+              <option value="google_jobs">Google Jobs</option>
+              <option value="linkedin">LinkedIn</option>
+              <option value="indeed">Indeed</option>
+              <option value="glassdoor">Glassdoor</option>
+              <option value="other">Other</option>
+            </select>
+            {formData.platform === 'other' && (
+              <input
+                type="text"
+                className="w-full p-2 rounded-md bg-background border text-foreground"
+                value={formData.customPlatform}
+                onChange={(e) => setFormData({ ...formData, customPlatform: e.target.value })}
+                placeholder="Enter platform name"
+              />
+            )}
           </div>
 
           <div>
@@ -75,7 +119,6 @@ export default function JobApplicationForm({
             <input
               type="date"
               required
-              max={localDate}
               className="w-full p-2 rounded-md bg-background border text-foreground"
               value={formData.dateApplied}
               onChange={(e) => setFormData({ ...formData, dateApplied: e.target.value })}
@@ -87,11 +130,13 @@ export default function JobApplicationForm({
             <select
               className="w-full p-2 rounded-md bg-background border text-foreground"
               value={formData.status}
-              onChange={(e) => setFormData({ ...formData, status: e.target.value as ApplicationStatus })}
+              onChange={(e) => setFormData({ ...formData, status: e.target.value as JobApplication['status'] })}
             >
               <option value="pending">Pending</option>
               <option value="rejected">Rejected</option>
               <option value="accepted">Accepted</option>
+              <option value="never_responded">Never Responded</option>
+              <option value="interview">Interview</option>
             </select>
           </div>
 

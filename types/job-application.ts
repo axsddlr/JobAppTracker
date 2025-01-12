@@ -1,8 +1,13 @@
-export type ApplicationStatus = 'pending' | 'rejected' | 'accepted';
+export type ApplicationStatus = 'pending' | 'rejected' | 'accepted' | 'never_responded' | 'interview';
+
+export type Platform = 'google_jobs' | 'linkedin' | 'indeed' | 'glassdoor' | 'other';
 
 export interface JobApplication {
   id: number;
   companyName: string;
+  position?: string;
+  platform?: Platform;
+  customPlatform?: string; // For when platform is 'other'
   jobUrl: string;
   dateApplied: string;
   status: ApplicationStatus;

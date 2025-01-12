@@ -2,7 +2,19 @@
 
 import { ExternalLink, Trash2, Edit2 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
-import { JobApplication } from '@/types/job-application';
+import { JobApplication, ApplicationStatus } from '@/types/job-application';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 interface JobApplicationListProps {
   applications: JobApplication[];
@@ -27,6 +39,10 @@ export default function JobApplicationList({
         return 'bg-green-100 dark:bg-green-950 text-green-800 dark:text-green-200';
       case 'rejected':
         return 'bg-red-100 dark:bg-red-950 text-red-800 dark:text-red-200';
+      case 'never_responded':
+        return 'bg-yellow-50 dark:bg-yellow-950/50 text-yellow-800 dark:text-yellow-200';
+      case 'interview':
+        return 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200';
       default:
         return 'bg-yellow-100 dark:bg-yellow-950 text-yellow-800 dark:text-yellow-200';
     }
@@ -42,6 +58,10 @@ export default function JobApplicationList({
         ? [...selectedIds, id]
         : selectedIds.filter(selectedId => selectedId !== id)
     );
+  };
+
+  const handleStatusChange = (app: JobApplication, newStatus: ApplicationStatus) => {
+    onEdit({ ...app, status: newStatus });
   };
 
   if (isLoading) {
@@ -74,6 +94,8 @@ export default function JobApplicationList({
                 />
               </th>
               <th className="px-4 sm:px-6 py-3 text-left text-xs sm:text-sm font-semibold text-foreground">Company</th>
+              <th className="px-4 sm:px-6 py-3 text-left text-xs sm:text-sm font-semibold text-foreground">Position</th>
+              <th className="px-4 sm:px-6 py-3 text-left text-xs sm:text-sm font-semibold text-foreground">Platform</th>
               <th className="px-4 sm:px-6 py-3 text-left text-xs sm:text-sm font-semibold text-foreground">Date Applied</th>
               <th className="px-4 sm:px-6 py-3 text-left text-xs sm:text-sm font-semibold text-foreground">Status</th>
               <th className="px-4 sm:px-6 py-3 text-left text-xs sm:text-sm font-semibold text-foreground">Actions</th>
@@ -90,13 +112,59 @@ export default function JobApplicationList({
                   />
                 </td>
                 <td className="px-4 sm:px-6 py-4 text-xs sm:text-sm text-foreground">{app.companyName}</td>
+                <td className="px-4 sm:px-6 py-4 text-xs sm:text-sm text-muted-foreground">{app.position || '-'}</td>
+                <td className="px-4 sm:px-6 py-4 text-xs sm:text-sm text-muted-foreground">
+                  {app.platform === 'other' 
+                    ? app.customPlatform || 'Other'
+                    : app.platform 
+                      ? app.platform.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') 
+                      : '-'}
+                </td>
                 <td className="px-4 sm:px-6 py-4 text-xs sm:text-sm text-muted-foreground">
                   {new Date(app.dateApplied).toLocaleDateString()}
                 </td>
                 <td className="px-4 sm:px-6 py-4">
-                  <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(app.status)}`}>
-                    {app.status.charAt(0).toUpperCase() + app.status.slice(1)}
-                  </span>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button 
+                        className={`px-2 py-1 text-xs font-medium rounded-full cursor-pointer ${getStatusColor(app.status)}`}
+                      >
+                        {app.status.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start">
+                      <DropdownMenuItem 
+                        onClick={() => handleStatusChange(app, 'pending')}
+                        className={app.status === 'pending' ? 'bg-yellow-100 dark:bg-yellow-950' : ''}
+                      >
+                        Pending
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => handleStatusChange(app, 'accepted')}
+                        className={app.status === 'accepted' ? 'bg-green-100 dark:bg-green-950' : ''}
+                      >
+                        Accepted
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => handleStatusChange(app, 'rejected')}
+                        className={app.status === 'rejected' ? 'bg-red-100 dark:bg-red-950' : ''}
+                      >
+                        Rejected
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => handleStatusChange(app, 'never_responded')}
+                        className={app.status === 'never_responded' ? 'bg-yellow-50 dark:bg-yellow-950/50' : ''}
+                      >
+                        Never Responded
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => handleStatusChange(app, 'interview')}
+                        className={app.status === 'interview' ? 'bg-gray-100 dark:bg-gray-800' : ''}
+                      >
+                        Interview
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </td>
                 <td className="px-4 sm:px-6 py-4 text-xs sm:text-sm">
                   <div className="flex items-center gap-4">
@@ -107,14 +175,23 @@ export default function JobApplicationList({
                     >
                       <Edit2 className="h-3 w-3 sm:h-4 sm:w-4" />
                     </button>
-                    <a
-                      href={app.jobUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-primary hover:opacity-80 flex items-center gap-1"
-                    >
-                      View <ExternalLink className="h-3 w-3 sm:h-4 sm:w-4" />
-                    </a>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <a
+                            href={app.jobUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary hover:opacity-80 flex items-center gap-1"
+                          >
+                            View <ExternalLink className="h-3 w-3 sm:h-4 sm:w-4" />
+                          </a>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="max-w-xs truncate">{app.jobUrl}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                     <button
                       onClick={() => onDelete(app.id)}
                       className="text-destructive hover:opacity-80 flex items-center gap-1"

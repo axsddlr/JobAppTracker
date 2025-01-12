@@ -2,6 +2,7 @@
 
 import { StatCard } from './StatCard';
 import { StatusPieChart } from './StatusPieChart';
+import { PlatformPieChart } from './PlatformPieChart';
 import { JobApplication } from '@/types/job-application';
 
 interface StatisticsPanelProps {
@@ -32,7 +33,10 @@ export function StatisticsPanel({ applications }: StatisticsPanelProps) {
           value={acceptedApplications}
         />
       </div>
-      <StatusPieChart applications={applications} />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <StatusPieChart applications={applications} />
+        <PlatformPieChart applications={applications} />
+      </div>
     </div>
   );
 }
