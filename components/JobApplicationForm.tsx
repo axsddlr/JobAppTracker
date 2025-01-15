@@ -33,7 +33,13 @@ export default function JobApplicationForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+    // Ensure platform data is included in submission
+    const submissionData = {
+      ...formData,
+      platform: formData.platform,
+      customPlatform: formData.platform === 'other' ? formData.customPlatform : undefined,
+    };
+    onSubmit(submissionData);
   };
 
   return (

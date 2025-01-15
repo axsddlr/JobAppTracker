@@ -13,17 +13,23 @@ export async function fetchApplications(): Promise<JobApplication[]> {
   }
 }
 
-type CreateApplicationInput = Pick<JobApplication, 'companyName' | 'jobUrl' | 'dateApplied' | 'status'>;
-
 export async function createApplication(
-  application: CreateApplicationInput
+  application: Partial<JobApplication>
 ): Promise<JobApplication> {
   try {
     const applications = await getDB();
     const now = new Date().toISOString();
-    const newApplication = {
-      ...application,
+    
+    // Create new application with all fields
+    const newApplication: JobApplication = {
       id: Date.now(),
+      companyName: application.companyName!,
+      position: application.position,
+      platform: application.platform,
+      customPlatform: application.platform === 'other' ? application.customPlatform : undefined,
+      jobUrl: application.jobUrl!,
+      dateApplied: application.dateApplied!,
+      status: application.status!,
       created_at: now,
       updated_at: now,
     };
@@ -45,10 +51,12 @@ export async function updateApplication(
     const index = applications.findIndex(app => app.id === id);
     if (index === -1) throw new Error('Application not found');
 
+    // Ensure platform data is handled correctly
     const updatedApplication = {
       ...applications[index],
       ...updates,
       id, // Ensure ID doesn't change
+      customPlatform: updates.platform === 'other' ? updates.customPlatform : undefined,
       updated_at: new Date().toISOString(),
     };
 

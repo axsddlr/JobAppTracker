@@ -5,9 +5,6 @@ import { JobApplication } from '@/types/job-application';
 import { fetchApplications, createApplication as create, updateApplication as update, deleteApplication as remove } from '@/lib/db';
 import { useToast } from '@/hooks/use-toast';
 
-// Define required fields for creating a new application
-type CreateApplicationInput = Pick<JobApplication, 'companyName' | 'jobUrl' | 'dateApplied' | 'status'>;
-
 export function useApplications() {
   const [applications, setApplications] = useState<JobApplication[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -39,14 +36,18 @@ export function useApplications() {
         throw new Error('Missing required fields');
       }
 
-      const input: CreateApplicationInput = {
+      // Include platform data in the creation
+      const newApplication = {
         companyName: application.companyName,
         jobUrl: application.jobUrl,
         dateApplied: application.dateApplied,
         status: application.status,
+        position: application.position,
+        platform: application.platform,
+        customPlatform: application.platform === 'other' ? application.customPlatform : undefined,
       };
 
-      await create(input);
+      await create(newApplication);
       await loadApplications();
       toast({
         title: 'Success',
@@ -64,7 +65,13 @@ export function useApplications() {
 
   const updateApplication = async (id: number, updates: Partial<JobApplication>) => {
     try {
-      await update(id, updates);
+      // Ensure platform data is handled correctly in updates
+      const updatedData = {
+        ...updates,
+        customPlatform: updates.platform === 'other' ? updates.customPlatform : undefined,
+      };
+
+      await update(id, updatedData);
       await loadApplications();
       toast({
         title: 'Success',

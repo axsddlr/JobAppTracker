@@ -1,8 +1,6 @@
-'use client';
-
 import { ExternalLink, Trash2, Edit2 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
-import { JobApplication, ApplicationStatus } from '@/types/job-application';
+import { JobApplication, ApplicationStatus, Platform } from '@/types/job-application';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,6 +13,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { Input } from '@/components/ui/input';
 
 interface JobApplicationListProps {
   applications: JobApplication[];
@@ -62,6 +61,38 @@ export default function JobApplicationList({
 
   const handleStatusChange = (app: JobApplication, newStatus: ApplicationStatus) => {
     onEdit({ ...app, status: newStatus });
+  };
+
+  const handlePlatformChange = (app: JobApplication, newPlatform: Platform | undefined) => {
+    const updatedApp = { 
+      ...app, 
+      platform: newPlatform,
+      customPlatform: newPlatform === 'other' ? app.customPlatform : undefined 
+    };
+    onEdit(updatedApp);
+  };
+
+  const handleCustomPlatformChange = (app: JobApplication, customPlatform: string) => {
+    const updatedApp = { 
+      ...app, 
+      platform: 'other', 
+      customPlatform 
+    };
+    onEdit(updatedApp);
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString();
+  };
+
+  const formatPlatformName = (platform: Platform | undefined, customPlatform: string | undefined) => {
+    if (platform === 'other') {
+      return customPlatform || 'Other';
+    }
+    return platform 
+      ? platform.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') 
+      : '-';
   };
 
   if (isLoading) {
@@ -114,14 +145,47 @@ export default function JobApplicationList({
                 <td className="px-4 sm:px-6 py-4 text-xs sm:text-sm text-foreground">{app.companyName}</td>
                 <td className="px-4 sm:px-6 py-4 text-xs sm:text-sm text-muted-foreground">{app.position || '-'}</td>
                 <td className="px-4 sm:px-6 py-4 text-xs sm:text-sm text-muted-foreground">
-                  {app.platform === 'other' 
-                    ? app.customPlatform || 'Other'
-                    : app.platform 
-                      ? app.platform.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') 
-                      : '-'}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="px-2 py-1 text-xs font-medium rounded-md hover:bg-muted">
+                        {formatPlatformName(app.platform, app.customPlatform)}
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="w-[200px]">
+                      <DropdownMenuItem onClick={() => handlePlatformChange(app, undefined)}>
+                        None
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handlePlatformChange(app, 'google_jobs')}>
+                        Google Jobs
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handlePlatformChange(app, 'linkedin')}>
+                        LinkedIn
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handlePlatformChange(app, 'indeed')}>
+                        Indeed
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handlePlatformChange(app, 'glassdoor')}>
+                        Glassdoor
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handlePlatformChange(app, 'other')}>
+                        Other
+                      </DropdownMenuItem>
+                      {app.platform === 'other' && (
+                        <div className="px-2 py-2">
+                          <Input
+                            type="text"
+                            placeholder="Enter platform name"
+                            value={app.customPlatform || ''}
+                            onChange={(e) => handleCustomPlatformChange(app, e.target.value)}
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </div>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </td>
                 <td className="px-4 sm:px-6 py-4 text-xs sm:text-sm text-muted-foreground">
-                  {new Date(app.dateApplied).toLocaleDateString()}
+                  {formatDate(app.dateApplied)}
                 </td>
                 <td className="px-4 sm:px-6 py-4">
                   <DropdownMenu>
