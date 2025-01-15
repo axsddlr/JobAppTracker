@@ -75,7 +75,7 @@ export default function JobApplicationList({
   const handleCustomPlatformChange = (app: JobApplication, customPlatform: string) => {
     const updatedApp = { 
       ...app, 
-      platform: 'other', 
+      platform: 'other' as Platform, 
       customPlatform 
     };
     onEdit(updatedApp);

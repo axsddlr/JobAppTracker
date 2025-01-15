@@ -24,7 +24,7 @@ export async function createApplication(
     const newApplication: JobApplication = {
       id: Date.now(),
       companyName: application.companyName!,
-      position: application.position,
+      position: application.position, // Will be undefined if empty
       platform: application.platform,
       customPlatform: application.platform === 'other' ? application.customPlatform : undefined,
       jobUrl: application.jobUrl!,
@@ -51,11 +51,12 @@ export async function updateApplication(
     const index = applications.findIndex(app => app.id === id);
     if (index === -1) throw new Error('Application not found');
 
-    // Ensure platform data is handled correctly
+    // Ensure all fields are handled correctly
     const updatedApplication = {
       ...applications[index],
       ...updates,
       id, // Ensure ID doesn't change
+      position: updates.position || undefined, // Only include if not empty
       customPlatform: updates.platform === 'other' ? updates.customPlatform : undefined,
       updated_at: new Date().toISOString(),
     };

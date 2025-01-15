@@ -33,9 +33,10 @@ export default function JobApplicationForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Ensure platform data is included in submission
+    // Ensure all fields are included in submission
     const submissionData = {
       ...formData,
+      position: formData.position || undefined, // Only include if not empty
       platform: formData.platform,
       customPlatform: formData.platform === 'other' ? formData.customPlatform : undefined,
     };
@@ -71,7 +72,7 @@ export default function JobApplicationForm({
             <input
               type="text"
               className="w-full p-2 rounded-md bg-background border text-foreground"
-              value={formData.position}
+              value={formData.position || ''}
               onChange={(e) => setFormData({ ...formData, position: e.target.value })}
               placeholder="Optional"
             />

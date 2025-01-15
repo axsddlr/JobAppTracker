@@ -36,13 +36,13 @@ export function useApplications() {
         throw new Error('Missing required fields');
       }
 
-      // Include platform data in the creation
+      // Include all fields in the creation
       const newApplication = {
         companyName: application.companyName,
         jobUrl: application.jobUrl,
         dateApplied: application.dateApplied,
         status: application.status,
-        position: application.position,
+        position: application.position || undefined, // Only include if not empty
         platform: application.platform,
         customPlatform: application.platform === 'other' ? application.customPlatform : undefined,
       };
@@ -65,9 +65,10 @@ export function useApplications() {
 
   const updateApplication = async (id: number, updates: Partial<JobApplication>) => {
     try {
-      // Ensure platform data is handled correctly in updates
+      // Ensure all fields are handled correctly in updates
       const updatedData = {
         ...updates,
+        position: updates.position || undefined, // Only include if not empty
         customPlatform: updates.platform === 'other' ? updates.customPlatform : undefined,
       };
 
