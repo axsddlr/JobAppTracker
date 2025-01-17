@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { JobApplication } from '@/types/job-application';
+import { JobApplication, ApplicationStatus } from '@/types/job-application';
 import { fetchApplications, createApplication as create, updateApplication as update, deleteApplication as remove } from '@/lib/db';
 import { useToast } from '@/hooks/use-toast';
 
@@ -88,6 +88,24 @@ export function useApplications() {
     }
   };
 
+  const updateApplicationStatus = async (id: number, status: ApplicationStatus) => {
+    try {
+      await update(id, { status });
+      await loadApplications();
+      toast({
+        title: 'Success',
+        description: 'Status updated successfully',
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to update status',
+        variant: 'destructive',
+      });
+      throw error;
+    }
+  };
+
   const deleteApplication = async (id: number) => {
     try {
       await remove(id);
@@ -111,6 +129,7 @@ export function useApplications() {
     isLoading,
     createApplication,
     updateApplication,
+    updateApplicationStatus,
     deleteApplication,
   };
 }

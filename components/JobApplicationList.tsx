@@ -20,6 +20,7 @@ interface JobApplicationListProps {
   isLoading: boolean;
   onDelete: (id: number) => void;
   onEdit: (application: JobApplication) => void;
+  onStatusChange: (id: number, status: ApplicationStatus) => void;
   selectedIds: number[];
   onSelectionChange: (ids: number[]) => void;
 }
@@ -29,6 +30,7 @@ export default function JobApplicationList({
   isLoading, 
   onDelete,
   onEdit,
+  onStatusChange,
   selectedIds,
   onSelectionChange
 }: JobApplicationListProps) {
@@ -39,7 +41,7 @@ export default function JobApplicationList({
       case 'rejected':
         return 'bg-red-100 dark:bg-red-950 text-red-800 dark:text-red-200';
       case 'never_responded':
-        return 'bg-yellow-50 dark:bg-yellow-950/50 text-yellow-800 dark:text-yellow-200';
+        return 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200';
       case 'interview':
         return 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200';
       default:
@@ -57,10 +59,6 @@ export default function JobApplicationList({
         ? [...selectedIds, id]
         : selectedIds.filter(selectedId => selectedId !== id)
     );
-  };
-
-  const handleStatusChange = (app: JobApplication, newStatus: ApplicationStatus) => {
-    onEdit({ ...app, status: newStatus });
   };
 
   const handlePlatformChange = (app: JobApplication, newPlatform: Platform | undefined) => {
@@ -198,31 +196,31 @@ export default function JobApplicationList({
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="start">
                       <DropdownMenuItem 
-                        onClick={() => handleStatusChange(app, 'pending')}
+                        onClick={() => onStatusChange(app.id, 'pending')}
                         className={app.status === 'pending' ? 'bg-yellow-100 dark:bg-yellow-950' : ''}
                       >
                         Pending
                       </DropdownMenuItem>
                       <DropdownMenuItem 
-                        onClick={() => handleStatusChange(app, 'accepted')}
+                        onClick={() => onStatusChange(app.id, 'accepted')}
                         className={app.status === 'accepted' ? 'bg-green-100 dark:bg-green-950' : ''}
                       >
                         Accepted
                       </DropdownMenuItem>
                       <DropdownMenuItem 
-                        onClick={() => handleStatusChange(app, 'rejected')}
+                        onClick={() => onStatusChange(app.id, 'rejected')}
                         className={app.status === 'rejected' ? 'bg-red-100 dark:bg-red-950' : ''}
                       >
                         Rejected
                       </DropdownMenuItem>
                       <DropdownMenuItem 
-                        onClick={() => handleStatusChange(app, 'never_responded')}
-                        className={app.status === 'never_responded' ? 'bg-yellow-50 dark:bg-yellow-950/50' : ''}
+                        onClick={() => onStatusChange(app.id, 'never_responded')}
+                        className={app.status === 'never_responded' ? 'bg-gray-100 dark:bg-gray-800' : ''}
                       >
                         Never Responded
                       </DropdownMenuItem>
                       <DropdownMenuItem 
-                        onClick={() => handleStatusChange(app, 'interview')}
+                        onClick={() => onStatusChange(app.id, 'interview')}
                         className={app.status === 'interview' ? 'bg-gray-100 dark:bg-gray-800' : ''}
                       >
                         Interview

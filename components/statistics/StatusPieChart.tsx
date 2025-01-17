@@ -21,7 +21,7 @@ export function StatusPieChart({ applications }: StatusPieChartProps) {
     { name: 'Accepted', value: statusCounts.accepted, color: 'rgb(34, 197, 94)' }, // Green
     { name: 'Rejected', value: statusCounts.rejected, color: 'rgb(239, 68, 68)' }, // Red
     { name: 'Pending', value: statusCounts.pending, color: 'rgb(234, 179, 8)' },  // Yellow
-    { name: 'Never Responded', value: statusCounts.never_responded, color: 'rgb(253, 224, 71)' }, // Light Yellow
+    { name: 'Never Responded', value: statusCounts.never_responded, color: 'rgb(156, 163, 175)' }, // Light Gray
     { name: 'Interview', value: statusCounts.interview, color: 'rgb(209, 213, 219)' }, // Light Gray
   ].filter(item => item.value > 0);
 

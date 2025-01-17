@@ -38,7 +38,8 @@ export default function Home() {
     isLoading, 
     createApplication, 
     updateApplication, 
-    deleteApplication 
+    deleteApplication,
+    updateApplicationStatus 
   } = useApplications();
 
   useKeyboardShortcuts({
@@ -64,7 +65,7 @@ export default function Home() {
   const handleBulkStatusChange = async (status: ApplicationStatus) => {
     try {
       for (const id of selectedIds) {
-        await updateApplication(id, { status });
+        await updateApplicationStatus(id, status);
       }
       setSelectedIds([]);
     } catch (error) {
@@ -155,6 +156,7 @@ export default function Home() {
               setEditingApplication(app);
               setIsFormOpen(true);
             }}
+            onStatusChange={updateApplicationStatus}
             selectedIds={selectedIds}
             onSelectionChange={setSelectedIds}
           />
