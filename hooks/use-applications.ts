@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { JobApplication, ApplicationStatus } from '@/types/job-application';
+import { JobApplication, ApplicationStatus, Platform } from '@/types/job-application';
 import { fetchApplications, createApplication as create, updateApplication as update, deleteApplication as remove } from '@/lib/db';
 import { useToast } from '@/hooks/use-toast';
 
@@ -106,6 +106,28 @@ export function useApplications() {
     }
   };
 
+  const updateApplicationPlatform = async (id: number, platform: Platform | undefined, customPlatform?: string) => {
+    try {
+      const updates = {
+        platform,
+        customPlatform: platform === 'other' ? customPlatform : undefined,
+      };
+      await update(id, updates);
+      await loadApplications();
+      toast({
+        title: 'Success',
+        description: 'Platform updated successfully',
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to update platform',
+        variant: 'destructive',
+      });
+      throw error;
+    }
+  };
+
   const deleteApplication = async (id: number) => {
     try {
       await remove(id);
@@ -130,6 +152,7 @@ export function useApplications() {
     createApplication,
     updateApplication,
     updateApplicationStatus,
+    updateApplicationPlatform,
     deleteApplication,
   };
 }

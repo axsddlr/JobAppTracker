@@ -39,7 +39,8 @@ export default function Home() {
     createApplication, 
     updateApplication, 
     deleteApplication,
-    updateApplicationStatus 
+    updateApplicationStatus,
+    updateApplicationPlatform 
   } = useApplications();
 
   useKeyboardShortcuts({
@@ -157,6 +158,7 @@ export default function Home() {
               setIsFormOpen(true);
             }}
             onStatusChange={updateApplicationStatus}
+            onPlatformChange={updateApplicationPlatform}
             selectedIds={selectedIds}
             onSelectionChange={setSelectedIds}
           />

@@ -21,6 +21,7 @@ interface JobApplicationListProps {
   onDelete: (id: number) => void;
   onEdit: (application: JobApplication) => void;
   onStatusChange: (id: number, status: ApplicationStatus) => void;
+  onPlatformChange: (id: number, platform: Platform | undefined, customPlatform?: string) => void;
   selectedIds: number[];
   onSelectionChange: (ids: number[]) => void;
 }
@@ -31,6 +32,7 @@ export default function JobApplicationList({
   onDelete,
   onEdit,
   onStatusChange,
+  onPlatformChange,
   selectedIds,
   onSelectionChange
 }: JobApplicationListProps) {
@@ -59,24 +61,6 @@ export default function JobApplicationList({
         ? [...selectedIds, id]
         : selectedIds.filter(selectedId => selectedId !== id)
     );
-  };
-
-  const handlePlatformChange = (app: JobApplication, newPlatform: Platform | undefined) => {
-    const updatedApp = { 
-      ...app, 
-      platform: newPlatform,
-      customPlatform: newPlatform === 'other' ? app.customPlatform : undefined 
-    };
-    onEdit(updatedApp);
-  };
-
-  const handleCustomPlatformChange = (app: JobApplication, customPlatform: string) => {
-    const updatedApp = { 
-      ...app, 
-      platform: 'other' as Platform, 
-      customPlatform 
-    };
-    onEdit(updatedApp);
   };
 
   const formatDate = (dateString: string) => {
@@ -150,22 +134,22 @@ export default function JobApplicationList({
                       </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="start" className="w-[200px]">
-                      <DropdownMenuItem onClick={() => handlePlatformChange(app, undefined)}>
+                      <DropdownMenuItem onClick={() => onPlatformChange(app.id, undefined)}>
                         None
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handlePlatformChange(app, 'google_jobs')}>
+                      <DropdownMenuItem onClick={() => onPlatformChange(app.id, 'google_jobs')}>
                         Google Jobs
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handlePlatformChange(app, 'linkedin')}>
+                      <DropdownMenuItem onClick={() => onPlatformChange(app.id, 'linkedin')}>
                         LinkedIn
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handlePlatformChange(app, 'indeed')}>
+                      <DropdownMenuItem onClick={() => onPlatformChange(app.id, 'indeed')}>
                         Indeed
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handlePlatformChange(app, 'glassdoor')}>
+                      <DropdownMenuItem onClick={() => onPlatformChange(app.id, 'glassdoor')}>
                         Glassdoor
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handlePlatformChange(app, 'other')}>
+                      <DropdownMenuItem onClick={() => onPlatformChange(app.id, 'other')}>
                         Other
                       </DropdownMenuItem>
                       {app.platform === 'other' && (
@@ -174,7 +158,7 @@ export default function JobApplicationList({
                             type="text"
                             placeholder="Enter platform name"
                             value={app.customPlatform || ''}
-                            onChange={(e) => handleCustomPlatformChange(app, e.target.value)}
+                            onChange={(e) => onPlatformChange(app.id, 'other', e.target.value)}
                             onClick={(e) => e.stopPropagation()}
                           />
                         </div>
