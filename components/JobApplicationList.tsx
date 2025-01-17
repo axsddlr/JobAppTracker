@@ -129,27 +129,27 @@ export default function JobApplicationList({
                 <td className="px-4 sm:px-6 py-4 text-xs sm:text-sm text-muted-foreground">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <button className="px-2 py-1 text-xs font-medium rounded-md hover:bg-muted">
+                      <button className="px-2 py-1 text-xs font-medium rounded-md hover:bg-muted min-w-[100px] text-left">
                         {formatPlatformName(app.platform, app.customPlatform)}
                       </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="start" className="w-[200px]">
-                      <DropdownMenuItem onClick={() => onPlatformChange(app.id, undefined)}>
+                      <DropdownMenuItem onClick={() => onPlatformChange(app.id, undefined)} className="whitespace-nowrap">
                         None
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => onPlatformChange(app.id, 'google_jobs')}>
+                      <DropdownMenuItem onClick={() => onPlatformChange(app.id, 'google_jobs')} className="whitespace-nowrap">
                         Google Jobs
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => onPlatformChange(app.id, 'linkedin')}>
+                      <DropdownMenuItem onClick={() => onPlatformChange(app.id, 'linkedin')} className="whitespace-nowrap">
                         LinkedIn
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => onPlatformChange(app.id, 'indeed')}>
+                      <DropdownMenuItem onClick={() => onPlatformChange(app.id, 'indeed')} className="whitespace-nowrap">
                         Indeed
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => onPlatformChange(app.id, 'glassdoor')}>
+                      <DropdownMenuItem onClick={() => onPlatformChange(app.id, 'glassdoor')} className="whitespace-nowrap">
                         Glassdoor
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => onPlatformChange(app.id, 'other')}>
+                      <DropdownMenuItem onClick={() => onPlatformChange(app.id, 'other')} className="whitespace-nowrap">
                         Other
                       </DropdownMenuItem>
                       {app.platform === 'other' && (
