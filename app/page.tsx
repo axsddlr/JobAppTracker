@@ -1,12 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
 import { PlusCircle, Briefcase, Keyboard } from 'lucide-react';
 import JobApplicationForm from '@/components/JobApplicationForm';
-import JobApplicationList from '@/components/JobApplicationList';
 import { SettingsDialog } from '@/components/settings/SettingsDialog';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
-import { StatisticsPanel } from '@/components/statistics/StatisticsPanel';
 import { SearchBar } from '@/components/search/SearchBar';
 import { FilterBar, FilterState } from '@/components/filters/FilterBar';
 import { BulkActionBar } from '@/components/bulk-actions/BulkActionBar';
@@ -23,7 +22,19 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 
+// Dynamically import components with proper handling of default exports
+const JobApplicationList = dynamic(
+  () => import('@/components/JobApplicationList').then(mod => mod.default),
+  { ssr: false }
+);
+
+const StatisticsPanel = dynamic(
+  () => import('@/components/statistics/StatisticsPanel').then(mod => ({ default: mod.StatisticsPanel })),
+  { ssr: false }
+);
+
 export default function Home() {
+  const [mounted, setMounted] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingApplication, setEditingApplication] = useState<JobApplication | null>(null);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
@@ -32,6 +43,8 @@ export default function Home() {
     status: 'all',
     dateRange: 'all',
   });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   const { 
     applications, 
@@ -43,11 +56,20 @@ export default function Home() {
     updateApplicationPlatform 
   } = useApplications();
 
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   useKeyboardShortcuts({
     'shift+n': () => setIsFormOpen(true),
     'shift+f': () => document.querySelector<HTMLInputElement>('input[type="text"]')?.focus(),
     'escape': () => setSelectedIds([]),
   });
+
+  // Reset to first page when filters or items per page changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters, itemsPerPage, searchQuery]);
 
   const handleSubmit = async (application: Partial<JobApplication>) => {
     try {
@@ -86,6 +108,11 @@ export default function Home() {
   };
 
   const filteredApplications = filterApplications(applications, searchQuery, filters);
+
+  // Prevent hydration issues by not rendering until client-side
+  if (!mounted) {
+    return null;
+  }
 
   return (
     <main className="min-h-screen bg-background flex flex-col">
@@ -138,7 +165,11 @@ export default function Home() {
               <div className="flex-1">
                 <SearchBar onSearch={setSearchQuery} />
               </div>
-              <FilterBar onFilterChange={setFilters} />
+              <FilterBar 
+                onFilterChange={setFilters} 
+                itemsPerPage={itemsPerPage}
+                onItemsPerPageChange={setItemsPerPage}
+              />
             </div>
             
             <BulkActionBar
@@ -161,6 +192,9 @@ export default function Home() {
             onPlatformChange={updateApplicationPlatform}
             selectedIds={selectedIds}
             onSelectionChange={setSelectedIds}
+            currentPage={currentPage}
+            onPageChange={setCurrentPage}
+            itemsPerPage={itemsPerPage}
           />
           
           {isFormOpen && (

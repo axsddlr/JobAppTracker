@@ -11,21 +11,54 @@ interface PlatformPieChartProps {
 export function PlatformPieChart({ applications }: PlatformPieChartProps) {
   const platformCounts = applications.reduce(
     (acc, app) => {
-      const platform = app.platform || 'unspecified';
-      acc[platform] = (acc[platform] || 0) + 1;
+      if (app.platform) {
+        acc[app.platform] = (acc[app.platform] || 0) + 1;
+      }
       return acc;
     },
     {} as Record<string, number>
   );
 
+  // Define colors directly in the data array to ensure they're applied
   const data = [
-    { name: 'Google Jobs', value: platformCounts.google_jobs || 0, color: 'rgb(66, 133, 244)' }, // Google Blue
-    { name: 'LinkedIn', value: platformCounts.linkedin || 0, color: 'rgb(10, 102, 194)' }, // LinkedIn Blue
-    { name: 'Indeed', value: platformCounts.indeed || 0, color: 'rgb(2, 120, 174)' }, // Indeed Blue
-    { name: 'Glassdoor', value: platformCounts.glassdoor || 0, color: 'rgb(0, 182, 125)' }, // Glassdoor Green
-    { name: 'Other', value: platformCounts.other || 0, color: 'rgb(156, 163, 175)' }, // Gray
-    { name: 'Unspecified', value: platformCounts.unspecified || 0, color: 'rgb(209, 213, 219)' }, // Light Gray
+    { 
+      name: 'Google Jobs', 
+      value: platformCounts.google_jobs || 0, 
+      fill: '#22c55e'  // Green
+    },
+    { 
+      name: 'LinkedIn', 
+      value: platformCounts.linkedin || 0, 
+      fill: '#0a66c2'  // LinkedIn blue
+    },
+    { 
+      name: 'Indeed', 
+      value: platformCounts.indeed || 0, 
+      fill: '#2557a7'  // Indeed blue
+    },
+    { 
+      name: 'Glassdoor', 
+      value: platformCounts.glassdoor || 0, 
+      fill: '#00b67d'  // Glassdoor green
+    },
+    { 
+      name: 'Other', 
+      value: platformCounts.other || 0, 
+      fill: '#db2777'  // Dark pink
+    }
   ].filter(item => item.value > 0);
+
+  // If no platforms are specified, show empty state
+  if (data.length === 0) {
+    return (
+      <Card className="p-4">
+        <h3 className="text-sm font-medium mb-4">Platform Distribution</h3>
+        <div className="h-[200px] w-full flex items-center justify-center text-muted-foreground">
+          No platform data available
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <Card className="p-4">
@@ -43,10 +76,15 @@ export function PlatformPieChart({ applications }: PlatformPieChartProps) {
               dataKey="value"
             >
               {data.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={entry.color} />
+                <Cell 
+                  key={`cell-${index}`} 
+                  fill={entry.fill}
+                />
               ))}
             </Pie>
-            <Legend />
+            <Legend 
+              formatter={(value) => <span style={{ color: data.find(item => item.name === value)?.fill }}>{value}</span>}
+            />
           </PieChart>
         </ResponsiveContainer>
       </div>
