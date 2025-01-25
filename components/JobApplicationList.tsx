@@ -280,10 +280,15 @@ export default function JobApplicationList({
           <Pagination>
             <PaginationContent>
               <PaginationItem>
-                <PaginationPrevious 
-                  onClick={() => onPageChange(currentPage - 1)}
-                  disabled={currentPage === 1}
-                />
+                {currentPage === 1 ? (
+                  <span className="pointer-events-none opacity-50">
+                    <PaginationPrevious />
+                  </span>
+                ) : (
+                  <PaginationPrevious 
+                    onClick={() => onPageChange(currentPage - 1)}
+                  />
+                )}
               </PaginationItem>
               
               {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
@@ -298,10 +303,15 @@ export default function JobApplicationList({
               ))}
               
               <PaginationItem>
-                <PaginationNext
-                  onClick={() => onPageChange(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                />
+                {currentPage === totalPages ? (
+                  <span className="pointer-events-none opacity-50">
+                    <PaginationNext />
+                  </span>
+                ) : (
+                  <PaginationNext
+                    onClick={() => onPageChange(currentPage + 1)}
+                  />
+                )}
               </PaginationItem>
             </PaginationContent>
           </Pagination>
