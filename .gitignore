@@ -37,3 +37,9 @@ next-env.d.ts
 
 # sqlite
 /data/
+
+# python / uv
+.venv/
+__pycache__/
+*.pyc
+.uv/
