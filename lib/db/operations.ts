@@ -13,7 +13,7 @@ export async function getAllApplications(): Promise<JobApplication[]> {
     );
   } catch (error) {
     console.error('Error accessing IndexedDB:', error);
-    return [];
+    throw new Error('Failed to read from database. IndexedDB may be unavailable.');
   }
 }
 
