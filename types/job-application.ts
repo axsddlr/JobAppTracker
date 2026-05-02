@@ -2,12 +2,23 @@ export type ApplicationStatus = 'pending' | 'rejected' | 'accepted' | 'never_res
 
 export type Platform = 'google_jobs' | 'linkedin' | 'indeed' | 'glassdoor' | 'other';
 
+export const PLATFORMS: Platform[] = ['google_jobs', 'linkedin', 'indeed', 'glassdoor', 'other'];
+
+export const APPLICATION_STATUSES: ApplicationStatus[] = [
+  'pending', 'rejected', 'accepted', 'never_responded', 'interview',
+];
+
+export interface FilterState {
+  status: ApplicationStatus | 'all';
+  dateRange: 'all' | 'today' | 'week' | 'month';
+}
+
 export interface JobApplication {
   id: number;
   companyName: string;
   position?: string;
   platform?: Platform;
-  customPlatform?: string; // For when platform is 'other'
+  customPlatform?: string;
   jobUrl: string;
   dateApplied: string;
   status: ApplicationStatus;

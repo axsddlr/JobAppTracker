@@ -1,7 +1,6 @@
 'use client';
 
-import { JobApplication } from '@/types/job-application';
-import { FilterState } from '@/components/filters/FilterBar';
+import { JobApplication, FilterState } from '@/types/job-application';
 
 export function filterApplications(
   applications: JobApplication[],
@@ -24,10 +23,10 @@ export function filterApplications(
     if (filters.dateRange === 'today') {
       matchesDate = appDate.toDateString() === today.toDateString();
     } else if (filters.dateRange === 'week') {
-      const weekAgo = new Date(today.setDate(today.getDate() - 7));
+      const weekAgo = new Date(today.getTime() - 7 * 86400000);
       matchesDate = appDate >= weekAgo;
     } else if (filters.dateRange === 'month') {
-      const monthAgo = new Date(today.setMonth(today.getMonth() - 1));
+      const monthAgo = new Date(today.getTime() - 30 * 86400000);
       matchesDate = appDate >= monthAgo;
     }
 

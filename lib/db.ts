@@ -1,5 +1,6 @@
 import { getDB, saveDB, putAppDB, deleteAppDB, getAppDB } from './db/client';
 import type { JobApplication } from '@/types/job-application';
+import { cleanOptionalField, customPlatformFor, generateId } from '@/lib/utils';
 
 export async function fetchApplications(): Promise<JobApplication[]> {
   try {
@@ -20,11 +21,11 @@ export async function createApplication(
     const now = new Date().toISOString();
     
     const newApplication: JobApplication = {
-      id: Date.now(),
+      id: generateId(),
       companyName: application.companyName!,
-      position: application.position,
+      position: cleanOptionalField(application.position),
       platform: application.platform,
-      customPlatform: application.platform === 'other' ? application.customPlatform : undefined,
+      customPlatform: customPlatformFor(application.platform, application.customPlatform),
       jobUrl: application.jobUrl!,
       dateApplied: application.dateApplied!,
       status: application.status!,
@@ -52,8 +53,8 @@ export async function updateApplication(
       ...existing,
       ...updates,
       id,
-      position: updates.position || undefined,
-      customPlatform: updates.platform === 'other' ? updates.customPlatform : undefined,
+      position: cleanOptionalField(updates.position),
+      customPlatform: customPlatformFor(updates.platform, updates.customPlatform),
       updated_at: new Date().toISOString(),
     };
 

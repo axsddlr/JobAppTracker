@@ -1,5 +1,6 @@
 import { utils, writeFile } from 'xlsx';
 import { getDB } from '@/lib/db/client';
+import { formatSnakeCase, customPlatformFor } from '@/lib/utils';
 
 export async function exportToExcel(): Promise<void> {
   try {
@@ -8,11 +9,11 @@ export async function exportToExcel(): Promise<void> {
     const worksheet = utils.json_to_sheet(applications.map(app => ({
       'Company Name': app.companyName,
       'Position': app.position || '',
-      'Platform': app.platform === 'other' ? app.customPlatform || 'Other' : 
-                 app.platform ? app.platform.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') : '',
+      'Platform': customPlatformFor(app.platform, app.customPlatform) || 
+                  (app.platform ? formatSnakeCase(app.platform) : ''),
       'Job URL': app.jobUrl,
       'Date Applied': new Date(app.dateApplied).toLocaleDateString(),
-      'Status': app.status.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
+      'Status': formatSnakeCase(app.status),
       'Created At': new Date(app.created_at).toLocaleString(),
       'Updated At': new Date(app.updated_at).toLocaleString()
     })));

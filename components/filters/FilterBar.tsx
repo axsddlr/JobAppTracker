@@ -9,18 +9,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
-import { ApplicationStatus } from '@/types/job-application';
+import { ApplicationStatus, FilterState, APPLICATION_STATUSES } from '@/types/job-application';
+import { formatSnakeCase } from '@/lib/utils';
 
 interface FilterBarProps {
   onFilterChange: (filters: FilterState) => void;
   itemsPerPage: number;
   onItemsPerPageChange: (value: number) => void;
-}
-
-export interface FilterState {
-  status: ApplicationStatus | 'all';
-  dateRange: 'all' | 'today' | 'week' | 'month';
 }
 
 export function FilterBar({ onFilterChange, itemsPerPage, onItemsPerPageChange }: FilterBarProps) {
@@ -50,9 +45,9 @@ export function FilterBar({ onFilterChange, itemsPerPage, onItemsPerPageChange }
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">All Status</SelectItem>
-          <SelectItem value="pending">Pending</SelectItem>
-          <SelectItem value="accepted">Accepted</SelectItem>
-          <SelectItem value="rejected">Rejected</SelectItem>
+          {APPLICATION_STATUSES.map(s => (
+            <SelectItem key={s} value={s}>{formatSnakeCase(s)}</SelectItem>
+          ))}
         </SelectContent>
       </Select>
 

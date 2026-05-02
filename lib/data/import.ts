@@ -1,5 +1,7 @@
-import { getDB, saveDB } from '@/lib/db/client';
-import type { JobApplication, Platform } from '@/types/job-application';
+import { saveDB } from '@/lib/db/client';
+import type { JobApplication, Platform, ApplicationStatus } from '@/types/job-application';
+import { PLATFORMS, APPLICATION_STATUSES } from '@/types/job-application';
+import { cleanOptionalField, customPlatformFor, generateId } from '@/lib/utils';
 
 export async function importFromJSON(jsonData: string): Promise<void> {
   try {
@@ -9,37 +11,37 @@ export async function importFromJSON(jsonData: string): Promise<void> {
       throw new Error('Invalid JSON format: expected an array');
     }
 
+    if (parsedData.length === 0) {
+      throw new Error('Import file is empty. No data was imported.');
+    }
+
     // Validate and format the imported data
-    const applications: JobApplication[] = parsedData.map((app: any) => {
-      // Ensure all required fields are present
+    const applications: JobApplication[] = parsedData.map((app: Record<string, unknown>) => {
       if (!app.companyName || !app.jobUrl || !app.dateApplied || !app.status) {
         throw new Error('Missing required fields in import data');
       }
 
-      // Validate status
-      const validStatuses = ['pending', 'rejected', 'accepted', 'never_responded', 'interview'];
-      if (!validStatuses.includes(app.status)) {
+      if (!APPLICATION_STATUSES.includes(app.status as ApplicationStatus)) {
         throw new Error(`Invalid status: ${app.status}`);
       }
 
-      // Validate platform if present
-      const validPlatforms: Platform[] = ['google_jobs', 'linkedin', 'indeed', 'glassdoor', 'other'];
-      if (app.platform && !validPlatforms.includes(app.platform)) {
+      if (app.platform && !PLATFORMS.includes(app.platform as Platform)) {
         throw new Error(`Invalid platform: ${app.platform}`);
       }
 
-      // Preserve the original ID and timestamps if they exist
+      const platform = (app.platform || undefined) as Platform | undefined;
+
       return {
-        id: app.id || Date.now(),
-        companyName: app.companyName,
-        position: app.position || undefined,
-        platform: app.platform || undefined,
-        customPlatform: app.platform === 'other' ? app.customPlatform : undefined,
-        jobUrl: app.jobUrl,
-        dateApplied: app.dateApplied,
-        status: app.status,
-        created_at: app.created_at || new Date().toISOString(),
-        updated_at: app.updated_at || new Date().toISOString()
+        id: (typeof app.id === 'number' ? app.id : generateId()),
+        companyName: app.companyName as string,
+        position: cleanOptionalField(app.position as string),
+        platform,
+        customPlatform: customPlatformFor(platform, app.customPlatform as string),
+        jobUrl: app.jobUrl as string,
+        dateApplied: app.dateApplied as string,
+        status: app.status as ApplicationStatus,
+        created_at: (app.created_at as string) || new Date().toISOString(),
+        updated_at: (app.updated_at as string) || new Date().toISOString()
       };
     });
 
@@ -48,11 +50,11 @@ export async function importFromJSON(jsonData: string): Promise<void> {
       typeof app.id === 'number' &&
       typeof app.companyName === 'string' &&
       (!app.position || typeof app.position === 'string') &&
-      (!app.platform || ['google_jobs', 'linkedin', 'indeed', 'glassdoor', 'other'].includes(app.platform)) &&
+      (!app.platform || PLATFORMS.includes(app.platform as Platform)) &&
       (!app.customPlatform || typeof app.customPlatform === 'string') &&
       typeof app.jobUrl === 'string' &&
       typeof app.dateApplied === 'string' &&
-      ['pending', 'rejected', 'accepted', 'never_responded', 'interview'].includes(app.status)
+      APPLICATION_STATUSES.includes(app.status as ApplicationStatus)
     );
 
     if (!isValid) {

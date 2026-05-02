@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { JobApplication, Platform } from '@/types/job-application';
+import { JobApplication, Platform, PLATFORMS, APPLICATION_STATUSES } from '@/types/job-application';
+import { cleanOptionalField, customPlatformFor, formatSnakeCase } from '@/lib/utils';
 
 interface JobApplicationFormProps {
   onSubmit: (application: Partial<JobApplication>) => void;
@@ -36,9 +37,9 @@ export default function JobApplicationForm({
     // Ensure all fields are included in submission
     const submissionData = {
       ...formData,
-      position: formData.position || undefined, // Only include if not empty
+      position: cleanOptionalField(formData.position),
       platform: formData.platform,
-      customPlatform: formData.platform === 'other' ? formData.customPlatform : undefined,
+      customPlatform: customPlatformFor(formData.platform, formData.customPlatform),
     };
     onSubmit(submissionData);
   };
@@ -93,11 +94,9 @@ export default function JobApplicationForm({
               }}
             >
               <option value="">Select Platform (Optional)</option>
-              <option value="google_jobs">Google Jobs</option>
-              <option value="linkedin">LinkedIn</option>
-              <option value="indeed">Indeed</option>
-              <option value="glassdoor">Glassdoor</option>
-              <option value="other">Other</option>
+              {PLATFORMS.map(p => (
+                <option key={p} value={p}>{formatSnakeCase(p)}</option>
+              ))}
             </select>
             {formData.platform === 'other' && (
               <input
@@ -139,11 +138,9 @@ export default function JobApplicationForm({
               value={formData.status}
               onChange={(e) => setFormData({ ...formData, status: e.target.value as JobApplication['status'] })}
             >
-              <option value="pending">Pending</option>
-              <option value="rejected">Rejected</option>
-              <option value="accepted">Accepted</option>
-              <option value="never_responded">Never Responded</option>
-              <option value="interview">Interview</option>
+              {APPLICATION_STATUSES.map(s => (
+                <option key={s} value={s}>{formatSnakeCase(s)}</option>
+              ))}
             </select>
           </div>
 

@@ -1,6 +1,7 @@
 import { ExternalLink, Trash2, Edit2 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
-import { JobApplication, ApplicationStatus, Platform } from '@/types/job-application';
+import { JobApplication, ApplicationStatus, Platform, APPLICATION_STATUSES, PLATFORMS } from '@/types/job-application';
+import { formatSnakeCase, customPlatformFor } from '@/lib/utils';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -86,9 +87,7 @@ export default function JobApplicationList({
     if (platform === 'other') {
       return customPlatform || 'Other';
     }
-    return platform 
-      ? platform.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') 
-      : '-';
+    return platform ? formatSnakeCase(platform) : '-';
   };
 
   if (isLoading) {
@@ -108,9 +107,10 @@ export default function JobApplicationList({
   }
 
   // Calculate pagination
-  const totalPages = Math.ceil(applications.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
+  const safeItemsPerPage = Math.max(itemsPerPage, 1);
+  const totalPages = Math.ceil(applications.length / safeItemsPerPage);
+  const startIndex = (currentPage - 1) * safeItemsPerPage;
+  const endIndex = startIndex + safeItemsPerPage;
   const currentApplications = applications.slice(startIndex, endIndex);
 
   return (
@@ -158,21 +158,11 @@ export default function JobApplicationList({
                         <DropdownMenuItem onClick={() => onPlatformChange(app.id, undefined)} className="whitespace-nowrap">
                           None
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onPlatformChange(app.id, 'google_jobs')} className="whitespace-nowrap">
-                          Google Jobs
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onPlatformChange(app.id, 'linkedin')} className="whitespace-nowrap">
-                          LinkedIn
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onPlatformChange(app.id, 'indeed')} className="whitespace-nowrap">
-                          Indeed
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onPlatformChange(app.id, 'glassdoor')} className="whitespace-nowrap">
-                          Glassdoor
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onPlatformChange(app.id, 'other')} className="whitespace-nowrap">
-                          Other
-                        </DropdownMenuItem>
+                        {PLATFORMS.map(p => (
+                          <DropdownMenuItem key={p} onClick={() => onPlatformChange(app.id, p)} className="whitespace-nowrap">
+                            {formatSnakeCase(p)}
+                          </DropdownMenuItem>
+                        ))}
                         {app.platform === 'other' && (
                           <div className="px-2 py-2">
                             <Input
@@ -196,40 +186,19 @@ export default function JobApplicationList({
                         <button 
                           className={`px-2 py-1 text-xs font-medium rounded-full cursor-pointer ${getStatusColor(app.status)}`}
                         >
-                          {app.status.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                          {formatSnakeCase(app.status)}
                         </button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="start">
-                        <DropdownMenuItem 
-                          onClick={() => onStatusChange(app.id, 'pending')}
-                          className={app.status === 'pending' ? 'bg-yellow-100 dark:bg-yellow-950' : ''}
-                        >
-                          Pending
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          onClick={() => onStatusChange(app.id, 'accepted')}
-                          className={app.status === 'accepted' ? 'bg-green-100 dark:bg-green-950' : ''}
-                        >
-                          Accepted
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          onClick={() => onStatusChange(app.id, 'rejected')}
-                          className={app.status === 'rejected' ? 'bg-red-100 dark:bg-red-950' : ''}
-                        >
-                          Rejected
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          onClick={() => onStatusChange(app.id, 'never_responded')}
-                          className={app.status === 'never_responded' ? 'bg-gray-100 dark:bg-gray-800' : ''}
-                        >
-                          Never Responded
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          onClick={() => onStatusChange(app.id, 'interview')}
-                          className={app.status === 'interview' ? 'bg-gray-100 dark:bg-gray-800' : ''}
-                        >
-                          Interview
-                        </DropdownMenuItem>
+                        {APPLICATION_STATUSES.map(s => (
+                          <DropdownMenuItem
+                            key={s}
+                            onClick={() => onStatusChange(app.id, s)}
+                            className={app.status === s ? getStatusColor(s) : ''}
+                          >
+                            {formatSnakeCase(s)}
+                          </DropdownMenuItem>
+                        ))}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </td>

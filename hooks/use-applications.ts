@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { JobApplication, ApplicationStatus, Platform } from '@/types/job-application';
 import { fetchApplications, createApplication as create, updateApplication as update, remove } from '@/lib/db';
 import { useToast } from '@/hooks/use-toast';
+import { cleanOptionalField, customPlatformFor } from '@/lib/utils';
 
 export function useApplications() {
   const [applications, setApplications] = useState<JobApplication[]>([]);
@@ -40,9 +41,9 @@ export function useApplications() {
         jobUrl: application.jobUrl,
         dateApplied: application.dateApplied,
         status: application.status,
-        position: application.position || undefined,
+        position: cleanOptionalField(application.position),
         platform: application.platform,
-        customPlatform: application.platform === 'other' ? application.customPlatform : undefined,
+        customPlatform: customPlatformFor(application.platform, application.customPlatform),
       };
 
       const created = await create(newApplication);
@@ -65,8 +66,8 @@ export function useApplications() {
     try {
       const updatedData = {
         ...updates,
-        position: updates.position || undefined,
-        customPlatform: updates.platform === 'other' ? updates.customPlatform : undefined,
+        position: cleanOptionalField(updates.position),
+        customPlatform: customPlatformFor(updates.platform, updates.customPlatform),
       };
 
       const updated = await update(id, updatedData);
@@ -107,7 +108,7 @@ export function useApplications() {
     try {
       const updates = {
         platform,
-        customPlatform: platform === 'other' ? customPlatform : undefined,
+        customPlatform: customPlatformFor(platform, customPlatform),
       };
       const updated = await update(id, updates);
       setApplications(prev => prev.map(app => app.id === id ? updated : app));

@@ -7,11 +7,11 @@ import JobApplicationForm from '@/components/JobApplicationForm';
 import { SettingsDialog } from '@/components/settings/SettingsDialog';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { SearchBar } from '@/components/search/SearchBar';
-import { FilterBar, FilterState } from '@/components/filters/FilterBar';
+import { FilterBar } from '@/components/filters/FilterBar';
 import { BulkActionBar } from '@/components/bulk-actions/BulkActionBar';
 import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts';
 import { filterApplications } from '@/lib/utils/filters';
-import { JobApplication, ApplicationStatus } from '@/types/job-application';
+import { JobApplication, ApplicationStatus, FilterState } from '@/types/job-application';
 import { useApplications } from '@/hooks/use-applications';
 import { Footer } from '@/components/Footer';
 import {
