@@ -38,7 +38,7 @@ interface JobApplicationListProps {
   itemsPerPage: number;
 }
 
-export default function JobApplicationList({ 
+export function JobApplicationList({ 
   applications, 
   isLoading, 
   onDelete,

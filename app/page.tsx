@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { PlusCircle, Briefcase, Keyboard } from 'lucide-react';
-import JobApplicationForm from '@/components/JobApplicationForm';
+import { JobApplicationForm } from '@/components/JobApplicationForm';
 import { SettingsDialog } from '@/components/settings/SettingsDialog';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { SearchBar } from '@/components/search/SearchBar';
@@ -25,7 +25,7 @@ import {
 
 // Dynamically import components with proper handling of default exports
 const JobApplicationList = dynamic(
-  () => import('@/components/JobApplicationList').then(mod => mod.default),
+  () => import('@/components/JobApplicationList').then(mod => mod.JobApplicationList),
   { ssr: false }
 );
 

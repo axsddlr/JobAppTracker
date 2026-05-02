@@ -11,7 +11,7 @@ interface JobApplicationFormProps {
   mode?: 'create' | 'edit';
 }
 
-export default function JobApplicationForm({ 
+export function JobApplicationForm({ 
   onSubmit, 
   onCancel, 
   initialData,
