@@ -22,7 +22,7 @@ export function JobDescriptionDialog({ jobUrl, companyName }: JobDescriptionDial
   const [description, setDescription] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isOpen, setIsOpen] = useState(false);
+  const [open, setOpen] = useState(false);
 
   const fetchDescription = async () => {
     if (description) return;
@@ -41,9 +41,9 @@ export function JobDescriptionDialog({ jobUrl, companyName }: JobDescriptionDial
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => {
-      setIsOpen(open);
-      if (open) fetchDescription();
+    <Dialog open={open} onOpenChange={(value) => {
+      setOpen(value);
+      if (value) fetchDescription();
     }}>
       <DialogTrigger asChild>
         <button
