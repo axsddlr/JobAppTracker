@@ -17,18 +17,46 @@ export async function getAllApplications(): Promise<JobApplication[]> {
   }
 }
 
+export async function getApplication(id: number): Promise<JobApplication | undefined> {
+  try {
+    const db = await initDB();
+    return await db.get(DB_CONFIG.stores.applications, id);
+  } catch (error) {
+    console.error('Error getting application from IndexedDB:', error);
+    throw new Error('Failed to read from database');
+  }
+}
+
+export async function putApplication(application: JobApplication): Promise<void> {
+  try {
+    const db = await initDB();
+    await db.put(DB_CONFIG.stores.applications, application);
+  } catch (error) {
+    console.error('Error writing to IndexedDB:', error);
+    throw new Error('Failed to write to database');
+  }
+}
+
+export async function deleteApplication(id: number): Promise<void> {
+  try {
+    const db = await initDB();
+    await db.delete(DB_CONFIG.stores.applications, id);
+  } catch (error) {
+    console.error('Error deleting from IndexedDB:', error);
+    throw new Error('Failed to delete from database');
+  }
+}
+
 export async function saveApplications(applications: JobApplication[]): Promise<void> {
   try {
     const db = await initDB();
     const tx = db.transaction(DB_CONFIG.stores.applications, 'readwrite');
     const store = tx.objectStore(DB_CONFIG.stores.applications);
     
-    // Clear existing data
     await store.clear();
     
-    // Add all applications in a single transaction
     for (const app of applications) {
-      await store.put(app); // Use put instead of add to handle existing IDs
+      await store.put(app);
     }
     
     await tx.done;

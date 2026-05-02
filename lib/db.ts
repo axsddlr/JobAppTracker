@@ -1,4 +1,4 @@
-import { getDB, saveDB } from './db/client';
+import { getDB, saveDB, putAppDB, deleteAppDB, getAppDB } from './db/client';
 import type { JobApplication } from '@/types/job-application';
 
 export async function fetchApplications(): Promise<JobApplication[]> {
@@ -17,14 +17,12 @@ export async function createApplication(
   application: Partial<JobApplication>
 ): Promise<JobApplication> {
   try {
-    const applications = await getDB();
     const now = new Date().toISOString();
     
-    // Create new application with all fields
     const newApplication: JobApplication = {
       id: Date.now(),
       companyName: application.companyName!,
-      position: application.position, // Will be undefined if empty
+      position: application.position,
       platform: application.platform,
       customPlatform: application.platform === 'other' ? application.customPlatform : undefined,
       jobUrl: application.jobUrl!,
@@ -34,7 +32,7 @@ export async function createApplication(
       updated_at: now,
     };
     
-    await saveDB([...applications, newApplication]);
+    await putAppDB(newApplication);
     return newApplication;
   } catch (error) {
     console.error('Error creating application:', error);
@@ -47,22 +45,19 @@ export async function updateApplication(
   updates: Partial<JobApplication>
 ): Promise<JobApplication> {
   try {
-    const applications = await getDB();
-    const index = applications.findIndex(app => app.id === id);
-    if (index === -1) throw new Error('Application not found');
+    const existing = await getAppDB(id);
+    if (!existing) throw new Error('Application not found');
 
-    // Ensure all fields are handled correctly
-    const updatedApplication = {
-      ...applications[index],
+    const updatedApplication: JobApplication = {
+      ...existing,
       ...updates,
-      id, // Ensure ID doesn't change
-      position: updates.position || undefined, // Only include if not empty
+      id,
+      position: updates.position || undefined,
       customPlatform: updates.platform === 'other' ? updates.customPlatform : undefined,
       updated_at: new Date().toISOString(),
     };
 
-    applications[index] = updatedApplication;
-    await saveDB(applications);
+    await putAppDB(updatedApplication);
     return updatedApplication;
   } catch (error) {
     console.error('Error updating application:', error);
@@ -70,11 +65,9 @@ export async function updateApplication(
   }
 }
 
-export async function deleteApplication(id: number): Promise<void> {
+export async function remove(id: number): Promise<void> {
   try {
-    const applications = await getDB();
-    const updatedApplications = applications.filter(app => app.id !== id);
-    await saveDB(updatedApplications);
+    await deleteAppDB(id);
   } catch (error) {
     console.error('Error deleting application:', error);
     throw new Error('Failed to delete application');

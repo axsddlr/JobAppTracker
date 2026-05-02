@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { JobApplication, ApplicationStatus, Platform } from '@/types/job-application';
-import { fetchApplications, createApplication as create, updateApplication as update, deleteApplication as remove } from '@/lib/db';
+import { fetchApplications, createApplication as create, updateApplication as update, remove } from '@/lib/db';
 import { useToast } from '@/hooks/use-toast';
 
 export function useApplications() {
@@ -31,24 +31,22 @@ export function useApplications() {
 
   const createApplication = async (application: Partial<JobApplication>) => {
     try {
-      // Validate required fields
       if (!application.companyName || !application.jobUrl || !application.dateApplied || !application.status) {
         throw new Error('Missing required fields');
       }
 
-      // Include all fields in the creation
       const newApplication = {
         companyName: application.companyName,
         jobUrl: application.jobUrl,
         dateApplied: application.dateApplied,
         status: application.status,
-        position: application.position || undefined, // Only include if not empty
+        position: application.position || undefined,
         platform: application.platform,
         customPlatform: application.platform === 'other' ? application.customPlatform : undefined,
       };
 
-      await create(newApplication);
-      await loadApplications();
+      const created = await create(newApplication);
+      setApplications(prev => [created, ...prev]);
       toast({
         title: 'Success',
         description: 'Application added successfully',
@@ -65,15 +63,14 @@ export function useApplications() {
 
   const updateApplication = async (id: number, updates: Partial<JobApplication>) => {
     try {
-      // Ensure all fields are handled correctly in updates
       const updatedData = {
         ...updates,
-        position: updates.position || undefined, // Only include if not empty
+        position: updates.position || undefined,
         customPlatform: updates.platform === 'other' ? updates.customPlatform : undefined,
       };
 
-      await update(id, updatedData);
-      await loadApplications();
+      const updated = await update(id, updatedData);
+      setApplications(prev => prev.map(app => app.id === id ? updated : app));
       toast({
         title: 'Success',
         description: 'Application updated successfully',
@@ -90,8 +87,8 @@ export function useApplications() {
 
   const updateApplicationStatus = async (id: number, status: ApplicationStatus) => {
     try {
-      await update(id, { status });
-      await loadApplications();
+      const updated = await update(id, { status });
+      setApplications(prev => prev.map(app => app.id === id ? updated : app));
       toast({
         title: 'Success',
         description: 'Status updated successfully',
@@ -112,8 +109,8 @@ export function useApplications() {
         platform,
         customPlatform: platform === 'other' ? customPlatform : undefined,
       };
-      await update(id, updates);
-      await loadApplications();
+      const updated = await update(id, updates);
+      setApplications(prev => prev.map(app => app.id === id ? updated : app));
       toast({
         title: 'Success',
         description: 'Platform updated successfully',
@@ -131,7 +128,7 @@ export function useApplications() {
   const deleteApplication = async (id: number) => {
     try {
       await remove(id);
-      await loadApplications();
+      setApplications(prev => prev.filter(app => app.id !== id));
       toast({
         title: 'Success',
         description: 'Application deleted successfully',
@@ -146,6 +143,50 @@ export function useApplications() {
     }
   };
 
+  const bulkUpdateStatus = async (ids: number[], status: ApplicationStatus) => {
+    try {
+      const updatedApps: JobApplication[] = [];
+      for (const id of ids) {
+        const updated = await update(id, { status });
+        updatedApps.push(updated);
+      }
+      const updatedMap = new Map(updatedApps.map(app => [app.id, app]));
+      setApplications(prev => prev.map(app => updatedMap.get(app.id) || app));
+      toast({
+        title: 'Success',
+        description: `Updated ${ids.length} application${ids.length > 1 ? 's' : ''}`,
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to update statuses',
+        variant: 'destructive',
+      });
+      throw error;
+    }
+  };
+
+  const bulkDelete = async (ids: number[]) => {
+    try {
+      for (const id of ids) {
+        await remove(id);
+      }
+      const deleteSet = new Set(ids);
+      setApplications(prev => prev.filter(app => !deleteSet.has(app.id)));
+      toast({
+        title: 'Success',
+        description: `Deleted ${ids.length} application${ids.length > 1 ? 's' : ''}`,
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to delete applications',
+        variant: 'destructive',
+      });
+      throw error;
+    }
+  };
+
   return {
     applications,
     isLoading,
@@ -154,5 +195,7 @@ export function useApplications() {
     updateApplicationStatus,
     updateApplicationPlatform,
     deleteApplication,
+    bulkUpdateStatus,
+    bulkDelete,
   };
 }

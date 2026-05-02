@@ -53,7 +53,9 @@ export default function Home() {
     updateApplication, 
     deleteApplication,
     updateApplicationStatus,
-    updateApplicationPlatform 
+    updateApplicationPlatform,
+    bulkUpdateStatus,
+    bulkDelete,
   } = useApplications();
 
   useEffect(() => {
@@ -87,9 +89,7 @@ export default function Home() {
 
   const handleBulkStatusChange = async (status: ApplicationStatus) => {
     try {
-      for (const id of selectedIds) {
-        await updateApplicationStatus(id, status);
-      }
+      await bulkUpdateStatus(selectedIds, status);
       setSelectedIds([]);
     } catch (error) {
       console.error('Failed to update status:', error);
@@ -98,9 +98,7 @@ export default function Home() {
 
   const handleBulkDelete = async () => {
     try {
-      for (const id of selectedIds) {
-        await deleteApplication(id);
-      }
+      await bulkDelete(selectedIds);
       setSelectedIds([]);
     } catch (error) {
       console.error('Failed to delete applications:', error);
