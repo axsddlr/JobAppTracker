@@ -1,6 +1,6 @@
 import { utils, writeFile } from 'xlsx';
 import { getDB } from '@/lib/db/client';
-import { formatSnakeCase, customPlatformFor } from '@/lib/utils';
+import { formatSnakeCase, customPlatformFor, formatDate, formatDateTime } from '@/lib/utils';
 
 export async function exportToExcel(): Promise<void> {
   try {
@@ -12,10 +12,10 @@ export async function exportToExcel(): Promise<void> {
       'Platform': customPlatformFor(app.platform, app.customPlatform) || 
                   (app.platform ? formatSnakeCase(app.platform) : ''),
       'Job URL': app.jobUrl,
-      'Date Applied': new Date(app.dateApplied).toLocaleDateString(),
+      'Date Applied': formatDate(app.dateApplied, 'PP'),
       'Status': formatSnakeCase(app.status),
-      'Created At': new Date(app.created_at).toLocaleString(),
-      'Updated At': new Date(app.updated_at).toLocaleString()
+      'Created At': formatDateTime(app.created_at),
+      'Updated At': formatDateTime(app.updated_at)
     })));
     
     const workbook = utils.book_new();

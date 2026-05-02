@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { JobApplication, Platform, PLATFORMS, APPLICATION_STATUSES } from '@/types/job-application';
-import { cleanOptionalField, customPlatformFor, formatSnakeCase } from '@/lib/utils';
+import { cleanOptionalField, customPlatformFor, formatSnakeCase, formatDateInput } from '@/lib/utils';
 
 interface JobApplicationFormProps {
   onSubmit: (application: Partial<JobApplication>) => void;
@@ -17,10 +17,7 @@ export default function JobApplicationForm({
   initialData,
   mode = 'create' 
 }: JobApplicationFormProps) {
-  const today = new Date();
-  const localDate = new Date(today.getTime() - (today.getTimezoneOffset() * 60000))
-                    .toISOString()
-                    .split('T')[0];
+  const localDate = formatDateInput(new Date());
 
   const [formData, setFormData] = useState<Partial<JobApplication>>({
     companyName: initialData?.companyName || '',

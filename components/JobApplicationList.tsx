@@ -1,7 +1,7 @@
 import { ExternalLink, Trash2, Edit2 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { JobApplication, ApplicationStatus, Platform, APPLICATION_STATUSES, PLATFORMS } from '@/types/job-application';
-import { formatSnakeCase, customPlatformFor } from '@/lib/utils';
+import { formatSnakeCase, customPlatformFor, formatDate } from '@/lib/utils';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -76,11 +76,6 @@ export default function JobApplicationList({
         ? [...selectedIds, id]
         : selectedIds.filter(selectedId => selectedId !== id)
     );
-  };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString();
   };
 
   const formatPlatformName = (platform: Platform | undefined, customPlatform: string | undefined) => {
