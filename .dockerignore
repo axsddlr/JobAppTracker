@@ -22,8 +22,34 @@ out
 # IDE files
 .idea
 .vscode
+*.swp
+*.swo
+
+# Python
+.venv
+__pycache__
+*.pyc
+
+# Data / generated
+data
+*.csv
+*.db
+*.db-journal
+*.db-wal
+
+# Stubs / unused
+supabase
+prisma
+tasks
+app/login
+app/register
+components/auth
+app/api/auth
 
 # Misc
 README.md
+*.md
 *.log
 .DS_Store
+.aider*
+.bolt

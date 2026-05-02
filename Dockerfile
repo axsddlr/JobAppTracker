@@ -1,30 +1,34 @@
 # Build stage
 FROM node:22-alpine AS builder
 
+RUN apk add --no-cache python3 make g++
+
 WORKDIR /usr/src/app
 
+COPY package.json package-lock.json ./
+RUN npm ci
+
 COPY . .
-RUN npm install
 
 RUN npx next telemetry disable
-
 RUN npm run build
 
 # Production stage
 FROM node:22-alpine AS runner
 
+RUN addgroup -g 1001 -S app && adduser -S app -u 1001 -G app
+
 WORKDIR /usr/src/app
 
-ENV NODE_ENV=production
+ENV NODE_ENV=production \
+    SQLITE_PATH=/usr/src/app/data/jobapp.db
 
-COPY --from=builder /usr/src/app/public ./public
-COPY --from=builder /usr/src/app/.next/standalone ./
-COPY --from=builder /usr/src/app/.next/static ./.next/static
-COPY --from=builder /usr/src/app/node_modules ./node_modules
+COPY --from=builder --chown=app:app /usr/src/app/.next/standalone ./
+COPY --from=builder --chown=app:app /usr/src/app/.next/static ./.next/static
 
-RUN mkdir -p /usr/src/app/data
+RUN mkdir -p data && chown app:app data
 
-ENV SQLITE_PATH=/usr/src/app/data/jobapp.db
+USER app
 
 EXPOSE 3000
 
