@@ -3,10 +3,28 @@ import type { JobApplication, Platform, ApplicationStatus } from '@/types/job-ap
 import { PLATFORMS, APPLICATION_STATUSES } from '@/types/job-application';
 import { cleanOptionalField, customPlatformFor, generateId } from '@/lib/utils';
 
-export async function importFromJSON(jsonData: string): Promise<void> {
+const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+const MAX_RECORDS = 10_000;
+
+export interface ImportResult {
+  imported: number;
+  skipped: number;
+  errors: string[];
+}
+
+function isValidDateString(str: string): boolean {
+  const d = new Date(str);
+  return d instanceof Date && !isNaN(d.getTime());
+}
+
+export async function importFromJSON(jsonData: string): Promise<ImportResult> {
+  if (jsonData.length > MAX_FILE_SIZE) {
+    throw new Error(`File is too large. Maximum size is ${MAX_FILE_SIZE / 1024 / 1024}MB.`);
+  }
+
   try {
     const parsedData = JSON.parse(jsonData);
-    
+
     if (!Array.isArray(parsedData)) {
       throw new Error('Invalid JSON format: expected an array');
     }
@@ -15,23 +33,40 @@ export async function importFromJSON(jsonData: string): Promise<void> {
       throw new Error('Import file is empty. No data was imported.');
     }
 
-    // Validate and format the imported data
-    const applications: JobApplication[] = parsedData.map((app: Record<string, unknown>) => {
+    if (parsedData.length > MAX_RECORDS) {
+      throw new Error(`Import file contains ${parsedData.length} records. Maximum is ${MAX_RECORDS}.`);
+    }
+
+    const applications: JobApplication[] = [];
+    const errors: string[] = [];
+
+    for (let i = 0; i < parsedData.length; i++) {
+      const app = parsedData[i] as Record<string, unknown>;
+      const rowNum = i + 1;
+
       if (!app.companyName || !app.jobUrl || !app.dateApplied || !app.status) {
-        throw new Error('Missing required fields in import data');
+        errors.push(`Row ${rowNum}: Missing required fields`);
+        continue;
       }
 
       if (!APPLICATION_STATUSES.includes(app.status as ApplicationStatus)) {
-        throw new Error(`Invalid status: ${app.status}`);
+        errors.push(`Row ${rowNum}: Invalid status "${app.status}"`);
+        continue;
       }
 
       if (app.platform && !PLATFORMS.includes(app.platform as Platform)) {
-        throw new Error(`Invalid platform: ${app.platform}`);
+        errors.push(`Row ${rowNum}: Invalid platform "${app.platform}"`);
+        continue;
+      }
+
+      if (!isValidDateString(app.dateApplied as string)) {
+        errors.push(`Row ${rowNum}: Invalid date "${app.dateApplied}"`);
+        continue;
       }
 
       const platform = (app.platform || undefined) as Platform | undefined;
 
-      return {
+      applications.push({
         id: (typeof app.id === 'number' ? app.id : generateId()),
         companyName: app.companyName as string,
         position: cleanOptionalField(app.position as string),
@@ -41,29 +76,33 @@ export async function importFromJSON(jsonData: string): Promise<void> {
         dateApplied: app.dateApplied as string,
         status: app.status as ApplicationStatus,
         created_at: (app.created_at as string) || new Date().toISOString(),
-        updated_at: (app.updated_at as string) || new Date().toISOString()
-      };
-    });
-
-    // Validate all applications
-    const isValid = applications.every(app => 
-      typeof app.id === 'number' &&
-      typeof app.companyName === 'string' &&
-      (!app.position || typeof app.position === 'string') &&
-      (!app.platform || PLATFORMS.includes(app.platform as Platform)) &&
-      (!app.customPlatform || typeof app.customPlatform === 'string') &&
-      typeof app.jobUrl === 'string' &&
-      typeof app.dateApplied === 'string' &&
-      APPLICATION_STATUSES.includes(app.status as ApplicationStatus)
-    );
-
-    if (!isValid) {
-      throw new Error('Invalid data format in import file');
+        updated_at: (app.updated_at as string) || new Date().toISOString(),
+      });
     }
 
-    // Save the imported applications
+    if (applications.length === 0 && errors.length > 0) {
+      throw new Error(`All ${parsedData.length} records failed validation. First error: ${errors[0]}`);
+    }
+
     await saveDB(applications);
+
+    return {
+      imported: applications.length,
+      skipped: errors.length,
+      errors,
+    };
   } catch (error) {
+    if (error instanceof Error) {
+      if (error.message.startsWith('File is') ||
+          error.message.startsWith('Import file') ||
+          error.message.startsWith('All ') ||
+          error.message === 'Invalid JSON format: expected an array') {
+        throw error;
+      }
+    }
+    if (error instanceof SyntaxError) {
+      throw new Error('Invalid JSON format. Please check the file is valid JSON.');
+    }
     console.error('Error importing from JSON:', error);
     throw error;
   }

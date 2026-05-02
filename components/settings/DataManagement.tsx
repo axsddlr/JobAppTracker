@@ -66,19 +66,26 @@ export function DataManagement({ onSuccess }: DataManagementProps) {
     try {
       setIsImporting(true);
       const text = await file.text();
-      await importFromJSON(text);
+      const result = await importFromJSON(text);
       
-      toast({
-        title: 'Success',
-        description: 'Applications imported successfully',
-      });
+      if (result.skipped > 0) {
+        toast({
+          title: 'Import Complete',
+          description: `Imported ${result.imported} application${result.imported !== 1 ? 's' : ''}. Skipped ${result.skipped} invalid record${result.skipped !== 1 ? 's' : ''}.`,
+        });
+      } else {
+        toast({
+          title: 'Success',
+          description: `Imported ${result.imported} application${result.imported !== 1 ? 's' : ''} successfully`,
+        });
+      }
       
       onSuccess?.();
       window.location.reload();
     } catch (error) {
       toast({
         title: 'Error',
-        description: 'Failed to import applications',
+        description: error instanceof Error ? error.message : 'Failed to import applications',
         variant: 'destructive',
       });
     } finally {
