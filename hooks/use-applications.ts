@@ -2,9 +2,22 @@
 
 import { useState, useEffect } from 'react';
 import { JobApplication, ApplicationStatus, Platform } from '@/types/job-application';
-import { fetchApplications, createApplication as create, updateApplication as update, remove } from '@/lib/db';
+import { cleanOptionalField, customPlatformFor, generateId } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import { cleanOptionalField, customPlatformFor } from '@/lib/utils';
+
+const API_BASE = '/api/applications';
+
+async function apiFetch(url: string, options?: RequestInit) {
+  const res = await fetch(url, {
+    headers: { 'Content-Type': 'application/json' },
+    ...options,
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error || `HTTP ${res.status}`);
+  }
+  return res.json();
+}
 
 export function useApplications() {
   const [applications, setApplications] = useState<JobApplication[]>([]);
@@ -17,7 +30,7 @@ export function useApplications() {
 
   async function loadApplications() {
     try {
-      const data = await fetchApplications();
+      const data = await apiFetch(API_BASE);
       setApplications(data);
     } catch (error) {
       toast({
@@ -31,159 +44,100 @@ export function useApplications() {
   }
 
   const createApplication = async (application: Partial<JobApplication>) => {
+    if (!application.companyName || !application.jobUrl || !application.dateApplied || !application.status) {
+      throw new Error('Missing required fields');
+    }
+
+    const newApp = {
+      id: generateId(),
+      companyName: application.companyName,
+      jobUrl: application.jobUrl,
+      dateApplied: application.dateApplied,
+      status: application.status,
+      position: cleanOptionalField(application.position),
+      platform: application.platform,
+      customPlatform: customPlatformFor(application.platform, application.customPlatform),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
     try {
-      if (!application.companyName || !application.jobUrl || !application.dateApplied || !application.status) {
-        throw new Error('Missing required fields');
-      }
-
-      const newApplication = {
-        companyName: application.companyName,
-        jobUrl: application.jobUrl,
-        dateApplied: application.dateApplied,
-        status: application.status,
-        position: cleanOptionalField(application.position),
-        platform: application.platform,
-        customPlatform: customPlatformFor(application.platform, application.customPlatform),
-      };
-
-      const created = await create(newApplication);
+      const created = await apiFetch(API_BASE, { method: 'POST', body: JSON.stringify(newApp) });
       setApplications(prev => [created, ...prev]);
-      toast({
-        title: 'Success',
-        description: 'Application added successfully',
-      });
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to add application',
-        variant: 'destructive',
-      });
+      toast({ title: 'Success', description: 'Application added successfully' });
+    } catch (error: any) {
+      toast({ title: 'Error', description: error.message || 'Failed to add application', variant: 'destructive' });
       throw error;
     }
   };
 
   const updateApplication = async (id: number, updates: Partial<JobApplication>) => {
     try {
-      const updatedData = {
-        ...updates,
-        position: cleanOptionalField(updates.position),
-        customPlatform: customPlatformFor(updates.platform, updates.customPlatform),
-      };
-
-      const updated = await update(id, updatedData);
+      const updated = await apiFetch(`${API_BASE}/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          ...updates,
+          position: cleanOptionalField(updates.position),
+          customPlatform: customPlatformFor(updates.platform as any, updates.customPlatform),
+        }),
+      });
       setApplications(prev => prev.map(app => app.id === id ? updated : app));
-      toast({
-        title: 'Success',
-        description: 'Application updated successfully',
-      });
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to update application',
-        variant: 'destructive',
-      });
+      toast({ title: 'Success', description: 'Application updated successfully' });
+    } catch (error: any) {
+      toast({ title: 'Error', description: error.message || 'Failed to update application', variant: 'destructive' });
       throw error;
     }
   };
 
   const updateApplicationStatus = async (id: number, status: ApplicationStatus) => {
-    try {
-      const updated = await update(id, { status });
-      setApplications(prev => prev.map(app => app.id === id ? updated : app));
-      toast({
-        title: 'Success',
-        description: 'Status updated successfully',
-      });
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to update status',
-        variant: 'destructive',
-      });
-      throw error;
-    }
+    return updateApplication(id, { status } as any);
   };
 
   const updateApplicationPlatform = async (id: number, platform: Platform | undefined, customPlatform?: string) => {
-    try {
-      const updates = {
-        platform,
-        customPlatform: customPlatformFor(platform, customPlatform),
-      };
-      const updated = await update(id, updates);
-      setApplications(prev => prev.map(app => app.id === id ? updated : app));
-      toast({
-        title: 'Success',
-        description: 'Platform updated successfully',
-      });
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to update platform',
-        variant: 'destructive',
-      });
-      throw error;
-    }
+    return updateApplication(id, {
+      platform,
+      customPlatform: customPlatformFor(platform, customPlatform),
+    } as any);
   };
 
   const deleteApplication = async (id: number) => {
     try {
-      await remove(id);
+      await apiFetch(`${API_BASE}/${id}`, { method: 'DELETE' });
       setApplications(prev => prev.filter(app => app.id !== id));
-      toast({
-        title: 'Success',
-        description: 'Application deleted successfully',
-      });
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to delete application',
-        variant: 'destructive',
-      });
+      toast({ title: 'Success', description: 'Application deleted successfully' });
+    } catch (error: any) {
+      toast({ title: 'Error', description: error.message || 'Failed to delete application', variant: 'destructive' });
       throw error;
     }
   };
 
   const bulkUpdateStatus = async (ids: number[], status: ApplicationStatus) => {
     try {
-      const updatedApps: JobApplication[] = [];
-      for (const id of ids) {
-        const updated = await update(id, { status });
-        updatedApps.push(updated);
-      }
-      const updatedMap = new Map(updatedApps.map(app => [app.id, app]));
-      setApplications(prev => prev.map(app => updatedMap.get(app.id) || app));
-      toast({
-        title: 'Success',
-        description: `Updated ${ids.length} application${ids.length > 1 ? 's' : ''}`,
+      await apiFetch(`${API_BASE}/batch`, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'update-status', ids, status }),
       });
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to update statuses',
-        variant: 'destructive',
-      });
+      setApplications(prev =>
+        prev.map(app => ids.includes(app.id) ? { ...app, status, updated_at: new Date().toISOString() } : app)
+      );
+      toast({ title: 'Success', description: `Updated ${ids.length} application${ids.length > 1 ? 's' : ''}` });
+    } catch (error: any) {
+      toast({ title: 'Error', description: error.message || 'Failed to update statuses', variant: 'destructive' });
       throw error;
     }
   };
 
   const bulkDelete = async (ids: number[]) => {
     try {
-      for (const id of ids) {
-        await remove(id);
-      }
+      await apiFetch(`${API_BASE}/batch`, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'delete', ids }),
+      });
       const deleteSet = new Set(ids);
       setApplications(prev => prev.filter(app => !deleteSet.has(app.id)));
-      toast({
-        title: 'Success',
-        description: `Deleted ${ids.length} application${ids.length > 1 ? 's' : ''}`,
-      });
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to delete applications',
-        variant: 'destructive',
-      });
+      toast({ title: 'Success', description: `Deleted ${ids.length} application${ids.length > 1 ? 's' : ''}` });
+    } catch (error: any) {
+      toast({ title: 'Error', description: error.message || 'Failed to delete applications', variant: 'destructive' });
       throw error;
     }
   };

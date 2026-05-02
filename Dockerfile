@@ -20,6 +20,11 @@ ENV NODE_ENV=production
 COPY --from=builder /usr/src/app/public ./public
 COPY --from=builder /usr/src/app/.next/standalone ./
 COPY --from=builder /usr/src/app/.next/static ./.next/static
+COPY --from=builder /usr/src/app/node_modules ./node_modules
+
+RUN mkdir -p /usr/src/app/data
+
+ENV SQLITE_PATH=/usr/src/app/data/jobapp.db
 
 EXPOSE 3000
 
