@@ -1,12 +1,9 @@
-# docker-compose.yml
-version: "3"
-
 services:
   app:
     build: ./
     container_name: "job_app_tracker"
     volumes:
-      - .:/app
+      - .:/usr/src/app
     ports:
       - "3110:3000"
     environment:
