@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from 'recharts';
 import { Card } from '@/components/ui/card';
 import { JobApplication } from '@/types/job-application';
@@ -9,18 +10,20 @@ interface PlatformPieChartProps {
 }
 
 export function PlatformPieChart({ applications }: PlatformPieChartProps) {
-  const platformCounts = applications.reduce(
-    (acc, app) => {
-      if (app.platform) {
-        acc[app.platform] = (acc[app.platform] || 0) + 1;
-      }
-      return acc;
-    },
-    {} as Record<string, number>
+  const platformCounts = useMemo(
+    () => applications.reduce(
+      (acc, app) => {
+        if (app.platform) {
+          acc[app.platform] = (acc[app.platform] || 0) + 1;
+        }
+        return acc;
+      },
+      {} as Record<string, number>
+    ),
+    [applications]
   );
 
-  // Define colors directly in the data array to ensure they're applied
-  const data = [
+  const data = useMemo(() => [
     { 
       name: 'Google Jobs', 
       value: platformCounts.google_jobs || 0, 
@@ -46,7 +49,7 @@ export function PlatformPieChart({ applications }: PlatformPieChartProps) {
       value: platformCounts.other || 0, 
       fill: '#db2777'  // Dark pink
     }
-  ].filter(item => item.value > 0);
+  ].filter(item => item.value > 0), [platformCounts]);
 
   // If no platforms are specified, show empty state
   if (data.length === 0) {

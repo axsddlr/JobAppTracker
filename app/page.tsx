@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { PlusCircle, Briefcase, Keyboard } from 'lucide-react';
 import JobApplicationForm from '@/components/JobApplicationForm';
@@ -13,6 +13,7 @@ import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts';
 import { filterApplications } from '@/lib/utils/filters';
 import { JobApplication, ApplicationStatus, FilterState } from '@/types/job-application';
 import { useApplications } from '@/hooks/use-applications';
+import { useMounted } from '@/hooks/use-mounted';
 import { Footer } from '@/components/Footer';
 import {
   Dialog,
@@ -34,7 +35,7 @@ const StatisticsPanel = dynamic(
 );
 
 export default function Home() {
-  const [mounted, setMounted] = useState(false);
+  const mounted = useMounted();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingApplication, setEditingApplication] = useState<JobApplication | null>(null);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
@@ -59,21 +60,10 @@ export default function Home() {
   } = useApplications();
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useKeyboardShortcuts({
-    'shift+n': () => setIsFormOpen(true),
-    'shift+f': () => document.querySelector<HTMLInputElement>('input[type="text"]')?.focus(),
-    'escape': () => setSelectedIds([]),
-  });
-
-  // Reset to first page when filters or items per page changes
-  useEffect(() => {
     setCurrentPage(1);
   }, [filters, itemsPerPage, searchQuery]);
 
-  const handleSubmit = async (application: Partial<JobApplication>) => {
+  const handleSubmit = useCallback(async (application: Partial<JobApplication>) => {
     try {
       if (editingApplication) {
         await updateApplication(editingApplication.id, application);
@@ -85,27 +75,38 @@ export default function Home() {
     } catch (error) {
       console.error('Failed to handle application:', error);
     }
-  };
+  }, [editingApplication, updateApplication, createApplication]);
 
-  const handleBulkStatusChange = async (status: ApplicationStatus) => {
+  const handleBulkStatusChange = useCallback(async (status: ApplicationStatus) => {
     try {
       await bulkUpdateStatus(selectedIds, status);
       setSelectedIds([]);
     } catch (error) {
       console.error('Failed to update status:', error);
     }
-  };
+  }, [selectedIds, bulkUpdateStatus]);
 
-  const handleBulkDelete = async () => {
+  const handleBulkDelete = useCallback(async () => {
     try {
       await bulkDelete(selectedIds);
       setSelectedIds([]);
     } catch (error) {
       console.error('Failed to delete applications:', error);
     }
-  };
+  }, [selectedIds, bulkDelete]);
 
-  const filteredApplications = filterApplications(applications, searchQuery, filters);
+  const filteredApplications = useMemo(
+    () => filterApplications(applications, searchQuery, filters),
+    [applications, searchQuery, filters]
+  );
+
+  const shortcuts = useMemo(() => ({
+    'shift+n': () => setIsFormOpen(true),
+    'shift+f': () => document.querySelector<HTMLInputElement>('input[type="text"]')?.focus(),
+    'escape': () => setSelectedIds([]),
+  }), []);
+
+  useKeyboardShortcuts(shortcuts);
 
   // Prevent hydration issues by not rendering until client-side
   if (!mounted) {

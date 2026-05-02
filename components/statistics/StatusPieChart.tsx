@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from 'recharts';
 import { Card } from '@/components/ui/card';
 import { JobApplication } from '@/types/job-application';
@@ -9,21 +10,24 @@ interface StatusPieChartProps {
 }
 
 export function StatusPieChart({ applications }: StatusPieChartProps) {
-  const statusCounts = applications.reduce(
-    (acc, app) => {
-      acc[app.status]++;
-      return acc;
-    },
-    { accepted: 0, rejected: 0, pending: 0, never_responded: 0, interview: 0 }
+  const statusCounts = useMemo(
+    () => applications.reduce(
+      (acc, app) => {
+        acc[app.status]++;
+        return acc;
+      },
+      { accepted: 0, rejected: 0, pending: 0, never_responded: 0, interview: 0 }
+    ),
+    [applications]
   );
 
-  const data = [
+  const data = useMemo(() => [
     { name: 'Accepted', value: statusCounts.accepted, color: 'rgb(34, 197, 94)' }, // Green
     { name: 'Rejected', value: statusCounts.rejected, color: 'rgb(239, 68, 68)' }, // Red
     { name: 'Pending', value: statusCounts.pending, color: 'rgb(234, 179, 8)' },  // Yellow
     { name: 'Never Responded', value: statusCounts.never_responded, color: 'rgb(156, 163, 175)' }, // Light Gray
     { name: 'Interview', value: statusCounts.interview, color: 'rgb(209, 213, 219)' }, // Light Gray
-  ].filter(item => item.value > 0);
+  ].filter(item => item.value > 0), [statusCounts]);
 
   return (
     <Card className="p-4">

@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { StatCard } from './StatCard';
 import { StatusPieChart } from './StatusPieChart';
 import { PlatformPieChart } from './PlatformPieChart';
@@ -11,10 +12,16 @@ interface StatisticsPanelProps {
 
 export function StatisticsPanel({ applications }: StatisticsPanelProps) {
   const totalApplications = applications.length;
-  const acceptedApplications = applications.filter(app => app.status === 'accepted').length;
-  const successRate = totalApplications > 0 
-    ? ((acceptedApplications / totalApplications) * 100).toFixed(1)
-    : '0.0';
+  const acceptedApplications = useMemo(
+    () => applications.filter(app => app.status === 'accepted').length,
+    [applications]
+  );
+  const successRate = useMemo(
+    () => totalApplications > 0
+      ? ((acceptedApplications / totalApplications) * 100).toFixed(1)
+      : '0.0',
+    [totalApplications, acceptedApplications]
+  );
 
   return (
     <div className="mb-8 space-y-4">
