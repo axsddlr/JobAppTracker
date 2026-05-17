@@ -1,11 +1,11 @@
-export type ApplicationStatus = 'pending' | 'rejected' | 'accepted' | 'never_responded' | 'interview';
+export type ApplicationStatus = 'pending' | 'rejected' | 'accepted' | 'never_responded' | 'interview' | 'denied' | 'pass';
 
 export type Platform = 'google_jobs' | 'linkedin' | 'indeed' | 'glassdoor' | 'other';
 
 export const PLATFORMS: Platform[] = ['google_jobs', 'linkedin', 'indeed', 'glassdoor', 'other'];
 
 export const APPLICATION_STATUSES: ApplicationStatus[] = [
-  'pending', 'rejected', 'accepted', 'never_responded', 'interview',
+  'pending', 'rejected', 'accepted', 'never_responded', 'interview', 'denied', 'pass',
 ];
 
 export interface FilterState {

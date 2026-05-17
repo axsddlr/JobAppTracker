@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { saveAllApplications } from '@/lib/db/sqlite';
+import { APPLICATION_STATUSES } from '@/types/job-application';
 
 export async function POST(request: NextRequest) {
   try {
@@ -8,6 +9,12 @@ export async function POST(request: NextRequest) {
 
     if (!Array.isArray(applications) || applications.length === 0) {
       return NextResponse.json({ error: 'No applications provided' }, { status: 400 });
+    }
+
+    for (const app of applications) {
+      if (app.status && !APPLICATION_STATUSES.includes(app.status)) {
+        return NextResponse.json({ error: `Invalid status '${app.status}' in application '${app.companyName}'. Valid values: ${APPLICATION_STATUSES.join(', ')}` }, { status: 400 });
+      }
     }
 
     saveAllApplications(applications);

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getApplicationById, updateApplication, deleteApplication } from '@/lib/db/sqlite';
+import { APPLICATION_STATUSES } from '@/types/job-application';
 
 export async function GET(
   _request: NextRequest,
@@ -23,6 +24,9 @@ export async function PUT(
 ) {
   try {
     const body = await request.json();
+    if (body.status && !APPLICATION_STATUSES.includes(body.status)) {
+      return NextResponse.json({ error: `Invalid status '${body.status}'. Valid values: ${APPLICATION_STATUSES.join(', ')}` }, { status: 400 });
+    }
     const app = updateApplication(Number(params.id), body);
     return NextResponse.json(app);
   } catch (error: any) {

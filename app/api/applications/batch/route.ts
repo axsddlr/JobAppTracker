@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { bulkUpdateStatus, bulkDelete } from '@/lib/db/sqlite';
+import { APPLICATION_STATUSES } from '@/types/job-application';
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,6 +14,9 @@ export async function POST(request: NextRequest) {
     if (action === 'update-status') {
       if (!status) {
         return NextResponse.json({ error: 'No status provided' }, { status: 400 });
+      }
+      if (!APPLICATION_STATUSES.includes(status)) {
+        return NextResponse.json({ error: `Invalid status '${status}'. Valid values: ${APPLICATION_STATUSES.join(', ')}` }, { status: 400 });
       }
       bulkUpdateStatus(ids, status);
       return NextResponse.json({ success: true, count: ids.length });
