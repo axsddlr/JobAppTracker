@@ -57,6 +57,7 @@ export function useApplications() {
       position: cleanOptionalField(application.position),
       platform: application.platform,
       customPlatform: customPlatformFor(application.platform, application.customPlatform),
+      reason: application.reason || undefined,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };

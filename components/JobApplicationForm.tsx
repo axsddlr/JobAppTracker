@@ -27,6 +27,7 @@ export function JobApplicationForm({
     jobUrl: initialData?.jobUrl || '',
     dateApplied: initialData?.dateApplied || localDate,
     status: initialData?.status || 'pending',
+    reason: initialData?.reason || '',
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -125,6 +126,17 @@ export function JobApplicationForm({
               className="w-full p-2 rounded-md bg-background border text-foreground"
               value={formData.dateApplied}
               onChange={(e) => setFormData({ ...formData, dateApplied: e.target.value })}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1 text-foreground">Reason / Notes</label>
+            <textarea
+              className="w-full p-2 rounded-md bg-background border text-foreground resize-none"
+              rows={3}
+              value={formData.reason || ''}
+              onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
+              placeholder="Optional — e.g. why rejected, interview outcome, etc."
             />
           </div>
 

@@ -22,6 +22,7 @@ export interface JobApplication {
   jobUrl: string;
   dateApplied: string;
   status: ApplicationStatus;
+  reason?: string;
   created_at: string;
   updated_at: string;
 }

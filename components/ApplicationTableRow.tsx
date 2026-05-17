@@ -1,6 +1,6 @@
 'use client';
 
-import { ExternalLink, Trash2, Edit2 } from 'lucide-react';
+import { ExternalLink, Trash2, Edit2, StickyNote } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { JobApplication, ApplicationStatus, Platform, APPLICATION_STATUSES, PLATFORMS } from '@/types/job-application';
 import { formatSnakeCase, formatDate } from '@/lib/utils';
@@ -106,6 +106,20 @@ export function ApplicationTableRow({
       </td>
       <td className="px-4 sm:px-6 py-4 text-xs sm:text-sm">
         <div className="flex items-center gap-4">
+          {app.reason && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="text-muted-foreground flex items-center gap-1 cursor-help">
+                    <StickyNote className="h-3 w-3 sm:h-4 sm:w-4" />
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent side="left" className="max-w-xs">
+                  <p>{app.reason}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
           <button
             onClick={() => onEdit(app)}
             className="text-primary hover:opacity-80 flex items-center gap-1"

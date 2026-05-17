@@ -31,6 +31,7 @@ function initSchema(db: Database.Database) {
       job_url TEXT NOT NULL,
       date_applied TEXT NOT NULL,
       status TEXT NOT NULL DEFAULT 'pending',
+      reason TEXT,
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL
     );
@@ -56,6 +57,7 @@ export interface ApplicationRow {
   job_url: string;
   date_applied: string;
   status: string;
+  reason: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -70,6 +72,7 @@ function rowToApp(row: ApplicationRow) {
     jobUrl: row.job_url,
     dateApplied: row.date_applied,
     status: row.status as any,
+    reason: row.reason || undefined,
     created_at: row.created_at,
     updated_at: row.updated_at,
   };
@@ -84,6 +87,7 @@ function appToRow(app: any) {
     job_url: app.jobUrl,
     date_applied: app.dateApplied,
     status: app.status,
+    reason: app.reason || null,
     created_at: app.created_at || new Date().toISOString(),
     updated_at: app.updated_at || new Date().toISOString(),
   };
@@ -105,8 +109,8 @@ export function createApplication(app: any) {
   const d = getDb();
   const row = appToRow(app);
   const stmt = d.prepare(`
-    INSERT INTO applications (company_name, position, platform, custom_platform, job_url, date_applied, status, created_at, updated_at)
-    VALUES (@company_name, @position, @platform, @custom_platform, @job_url, @date_applied, @status, @created_at, @updated_at)
+    INSERT INTO applications (company_name, position, platform, custom_platform, job_url, date_applied, status, reason, created_at, updated_at)
+    VALUES (@company_name, @position, @platform, @custom_platform, @job_url, @date_applied, @status, @reason, @created_at, @updated_at)
   `);
   const result = stmt.run(row);
   return getApplicationById(Number(result.lastInsertRowid));
@@ -129,6 +133,7 @@ export function updateApplication(id: number, updates: any) {
       job_url = @job_url,
       date_applied = @date_applied,
       status = @status,
+      reason = @reason,
       updated_at = @updated_at
     WHERE id = ?
   `).run(row, id);
@@ -169,8 +174,8 @@ export function saveAllApplications(apps: any[]) {
   const tx = d.transaction(() => {
     d.prepare('DELETE FROM applications').run();
     const stmt = d.prepare(`
-      INSERT INTO applications (id, company_name, position, platform, custom_platform, job_url, date_applied, status, created_at, updated_at)
-      VALUES (@id, @company_name, @position, @platform, @custom_platform, @job_url, @date_applied, @status, @created_at, @updated_at)
+      INSERT INTO applications (id, company_name, position, platform, custom_platform, job_url, date_applied, status, reason, created_at, updated_at)
+      VALUES (@id, @company_name, @position, @platform, @custom_platform, @job_url, @date_applied, @status, @reason, @created_at, @updated_at)
     `);
     for (const app of apps) {
       stmt.run({
