@@ -1,6 +1,6 @@
 services:
   app:
-    build: ./
+    image: ghcr.io/axsddlr/jobapptracker:0.2
     container_name: "job_app_tracker"
     volumes:
       - sqlite_data:/usr/src/app/data
