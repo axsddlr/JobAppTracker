@@ -31,13 +31,17 @@ function initSchema(db: Database.Database) {
       job_url TEXT NOT NULL,
       date_applied TEXT NOT NULL,
       status TEXT NOT NULL DEFAULT 'pending',
-      reason TEXT,
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL
     );
     CREATE INDEX IF NOT EXISTS idx_applications_date ON applications(date_applied);
     CREATE INDEX IF NOT EXISTS idx_applications_status ON applications(status);
   `);
+  try {
+    db.exec('ALTER TABLE applications ADD COLUMN reason TEXT');
+  } catch {
+    // Column already exists
+  }
 }
 
 // Close the database connection (useful for testing or graceful shutdown)
